@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassSync — Calmly Chaotic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --card-bg: #12151d;
+      --card-border: #232836;
+      --card-hover: #191e29;
+      --text-main: #f0f2f5;
+      --text-muted: #8b949e;
+      --accent-cyan: #38bdf8;
+      --accent-green: #4ade80;
+      --accent-amber: #facc15;
+      --accent-red: #f43f5e;
+      --font-mono: 'Space Mono', Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* Header Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--card-border);
+      background-color: rgba(10, 12, 16, 0.95);
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+    }
+
+    .brand span.team {
+      color: var(--accent-cyan);
+      font-size: 13px;
+      padding-left: 10px;
+      border-left: 1px solid var(--card-border);
+    }
+
+    .header-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* Slide Container */
+    main#slide-viewport {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 40px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1280px;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Headings & Text */
+    h1 {
+      font-size: 44px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    h2 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      margin-bottom: 6px;
+      color: #ffffff;
+    }
+
+    p.subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    /* Cards & Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 24px;
+      transition: border-color 0.15s ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent-cyan);
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Team Card Specifics */
+    .team-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      border-top: 2px solid var(--card-border);
+    }
+
+    .team-card:hover {
+      border-top-color: var(--accent-cyan);
+    }
+
+    .team-card .name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .team-card .role {
+      font-size: 11px;
+      color: var(--accent-cyan);
+      line-height: 1.5;
+    }
+
+    /* Bullet List Clean Styles */
+    ul.clean-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    ul.clean-list li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    ul.clean-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    ul.clean-list.problem li::before {
+      color: var(--accent-red);
+    }
+
+    ul.clean-list.solution li::before {
+      color: var(--accent-green);
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title.problem { color: var(--accent-red); }
+    .section-title.solution { color: var(--accent-green); }
+
+    /* SVG Icons Container */
+    .icon-box {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--card-border);
+      background-color: var(--bg);
+      border-radius: 4px;
+      margin-bottom: 14px;
+      color: var(--accent-cyan);
+    }
+
+    .icon-box svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Mermaid Container */
+    .mermaid-wrapper {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 420px;
+    }
+
+    .mermaid {
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Navigation Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 40px;
+      border-top: 1px solid var(--card-border);
+      background-color: rgba(10, 12, 16, 0.95);
+      z-index: 10;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    button.nav-btn {
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    button.nav-btn:hover {
+      background-color: var(--card-hover);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .key-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    .slide-counter {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 1px;
+    }
+
+    /* Media query for smaller displays */
+    @media (max-width: 1024px) {
+      .grid-5 { grid-template-columns: repeat(3, 1fr); }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: 1fr; }
+      header, footer, main#slide-viewport { padding: 16px 20px; }
+      h1 { font-size: 32px; }
+      h2 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <span>CLASSIFY // CLASSSYNC</span>
+      <span class="team">CALMLY CHAOTIC</span>
+    </div>
+    <div class="header-info">
+      CLASSROOM ARENA &bull; INTERACTIVE ARCHITECTURE
+    </div>
+  </header>
+
+  <!-- Slide Viewport -->
+  <main id="slide-viewport">
+
+    <!-- SLIDE 1: Title & Team Identity -->
+    <div class="slide active" data-slide="1">
+      <div style="margin-bottom: 32px;">
+        <h1>ClassSync</h1>
+        <p class="subtitle" style="font-size: 16px; margin-bottom: 0;">
+          Live Anti Cheat Quiz Arena and Interactive Slide Presenter
+        </p>
+        <p style="font-size: 12px; color: var(--accent-cyan); margin-top: 6px;">
+          Developed by Team Calmly Chaotic (Team CC)
+        </p>
+      </div>
+
+      <div class="grid-5">
+        <div class="card team-card">
+          <div>
+            <div class="name">Pratham</div>
+            <div class="role">Project Manager, System Architect & Lead QA</div>
+          </div>
+          <p style="margin-top: 16px;">Core platform engineering, end to end quality assurance, and architecture design.</p>
+        </div>
+
+        <div class="card team-card">
+          <div>
+            <div class="name">Ramya</div>
+            <div class="role">Backend & Database Developer</div>
+          </div>
+          <p style="margin-top: 16px;">Express REST APIs, Mongoose schemas, and Socket.io high-concurrency room memory.</p>
+        </div>
+
+        <div class="card team-card">
+          <div>
+            <div class="name">Nihal</div>
+            <div class="role">Frontend Developer (Module 1: Lobby & Identity)</div>
+          </div>
+          <p style="margin-top: 16px;">6-digit PIN lobby, QR code generator, and real-time custom DiceBear avatar studio.</p>
+        </div>
+
+        <div class="card team-card">
+          <div>
+            <div class="name">Dhruv</div>
+            <div class="role">Frontend Developer (Module 2: Quiz Arena) & QA</div>
+          </div>
+          <p style="margin-top: 16px;">Projector display, 4-button phone buzzer, speed decay scoring, and automated flow.</p>
+        </div>
+
+        <div class="card team-card">
+          <div>
+            <div class="name">Utkarsh</div>
+            <div class="role">Frontend Developer (Module 3: Presenter) & QA</div>
+          </div>
+          <p style="margin-top: 16px;">Synchronized slide deck, floating Danmaku comments, and real-time Confused meter.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem vs. Solution -->
+    <div class="slide" data-slide="2">
+      <h2>Problem vs. Solution</h2>
+      <p class="subtitle">Direct breakdown of conventional classroom friction and how ClassSync solves it.</p>
+
+      <div class="grid-2">
+        <!-- Problem Column -->
+        <div class="card" style="border-left: 3px solid var(--accent-red);">
+          <div class="section-title problem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <span>The Classroom Problem</span>
+          </div>
+          <ul class="clean-list problem">
+            <li>Students lose focus during one way slide lectures.</li>
+            <li>Students copy or search quiz questions on phones during live tests.</li>
+            <li>Students hesitate to raise hands in front of 50 classmates when stuck on a slide.</li>
+            <li>Looking down at phone screens breaks classroom attention.</li>
+          </ul>
+        </div>
+
+        <!-- Solution Column -->
+        <div class="card" style="border-left: 3px solid var(--accent-green);">
+          <div class="section-title solution">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Our Solution (ClassSync)</span>
+          </div>
+          <ul class="clean-list solution">
+            <li><strong>Eyes Up Quiz Controller:</strong> Questions and options appear only on the projector; student phones show only 4 colored buttons.</li>
+            <li><strong>Interactive Live Slide Presenter:</strong> Host controls slides on the big screen while students send live floating comments and tap an anonymous Confused button.</li>
+            <li><strong>Millisecond Speed Scoring:</strong> Fast correct answers earn higher points, driving live competition on the projector leaderboard.</li>
+            <li><strong>Instant QR Join:</strong> 50 students join in seconds with custom avatars and zero complex sign up.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: 4 Core System Modules -->
+    <div class="slide" data-slide="3">
+      <h2>Our 4 Core System Modules</h2>
+      <p class="subtitle">System architecture divided across 4 specialized engineering pillars.</p>
+
+      <div class="grid-4">
+        <!-- Module 1 -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </div>
+          <h3>Module 1: Core Identity, QR Lobby & Avatar Studio</h3>
+          <p style="color: var(--accent-cyan); font-size: 11px; margin-bottom: 6px;">Assigned to Nihal</p>
+          <p>Generates 6 digit Room PINs, renders scannable QR code join URLs, and lets students build live custom DiceBear avatars without creating accounts.</p>
+        </div>
+
+        <!-- Module 2 -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
+          <h3>Module 2: Anti Cheat 10 Question Quiz Arena</h3>
+          <p style="color: var(--accent-cyan); font-size: 11px; margin-bottom: 6px;">Assigned to Dhruv</p>
+          <p>Delivers questions exclusively to the host screen, turns student phones into blind 4 button buzzer pads, computes millisecond decay scores, and automates matrix leaderboards.</p>
+        </div>
+
+        <!-- Module 3 -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <h3>Module 3: Interactive Live Slide Presenter</h3>
+          <p style="color: var(--accent-cyan); font-size: 11px; margin-bottom: 6px;">Assigned to Utkarsh</p>
+          <p>Provides two way synchronized slide navigation, floating Danmaku bullet comments across the projector, and an anonymous Confused counter informing the teacher in real time.</p>
+        </div>
+
+        <!-- Module 4 -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+          </div>
+          <h3>Core Backend: Real Time Socket Engine & Database</h3>
+          <p style="color: var(--accent-cyan); font-size: 11px; margin-bottom: 6px;">Assigned to Ramya</p>
+          <p>Express REST API layer with CORS enabled for local Wi-Fi hotspots, in memory room tracking for 50 concurrent players, and MongoDB schemas for permanent storage.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Technology Stack -->
+    <div class="slide" data-slide="4">
+      <h2>Technology Stack</h2>
+      <p class="subtitle">Purpose built tools selected for high speed real time classroom synchronization.</p>
+
+      <div class="grid-5">
+        <!-- React -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(30 12 12)"></ellipse>
+              <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(90 12 12)"></ellipse>
+              <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(150 12 12)"></ellipse>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
+            </svg>
+          </div>
+          <h3>React.js</h3>
+          <p>Builds the Host Projector views and Student Phone controller screens.</p>
+        </div>
+
+        <!-- Node.js & Express -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+          </div>
+          <h3>Node.js & Express</h3>
+          <p>Runs the backend server and REST API endpoints with CORS enabled.</p>
+        </div>
+
+        <!-- Socket.io -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <h3>Socket.io</h3>
+          <p>Powers two way live communication between 50 phones and 1 projector screen.</p>
+        </div>
+
+        <!-- MongoDB -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2C8 6 6 10 6 14a6 6 0 0 0 12 0c0-4-2-8-6-12z"></path>
+              <line x1="12" y1="2" x2="12" y2="22"></line>
+            </svg>
+          </div>
+          <h3>MongoDB</h3>
+          <p>Stores created custom quizzes, slide decks, and final leaderboard results.</p>
+        </div>
+
+        <!-- Tailwind CSS -->
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 12c2.5-4 6-4 8 0 2.5 4 6 4 8 0"></path>
+              <path d="M4 18c2.5-4 6-4 8 0 2.5 4 6 4 8 0"></path>
+            </svg>
+          </div>
+          <h3>Tailwind CSS</h3>
+          <p>Styles the responsive projector dashboard and mobile touch buttons.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: System Architecture Diagram -->
+    <div class="slide" data-slide="5">
+      <h2>System Architecture</h2>
+      <p class="subtitle">Topology connecting 50 student client phones, host projector, real time sockets, and database.</p>
+
+      <div class="mermaid-wrapper">
+        <pre class="mermaid">
+flowchart LR
+    subgraph Clients ["Classroom Screens (React)"]
+        H["Host Projector Screen"]
+        P["50 Student Phones"]
+    end
+
+    subgraph Backend ["Server Layer (Node.js + Express)"]
+        S["Socket.io Live Room Engine"]
+        A["Express REST API + CORS"]
+    end
+
+    subgraph DB ["Database Layer"]
+        M[("MongoDB Storage")]
+    end
+
+    H <-->|"Live Events"| S
+    P <-->|"Button Taps & Comments"| S
+    H <-->|"Save & Load Quizzes"| A
+    A <-->|"Read & Write"| M
+        </pre>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Anti-Cheat Quiz Engine & Speed Decay Flow -->
+    <div class="slide" data-slide="6">
+      <h2>Anti Cheat Quiz Arena & Scoring Engine</h2>
+      <p class="subtitle">Blind buzzer delivery coupled with millisecond speed decay scoring.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: var(--accent-cyan); margin-bottom: 12px;">Anti Cheat Mechanics</h3>
+          <ul class="clean-list">
+            <li><strong>Blind Phone Controller:</strong> Questions, answers, timers, and live scores are never transmitted to student phones, preventing cheating and screen sharing.</li>
+            <li><strong>Automated 3 Stage Game Show Flow:</strong> After the question timer expires, the host screen automatically advances from Question to Option Matrix to Leaderboard without manual clicking.</li>
+            <li><strong>Configurable Timing Engine:</strong> Host can tune Question Time, Matrix Reveal Time, and Leaderboard Duration before launching the arena.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--accent-green); margin-bottom: 12px;">Speed Decay Scoring Formula</h3>
+          <div style="background-color: var(--bg); border: 1px solid var(--card-border); padding: 14px; border-radius: 4px; font-size: 13px; color: var(--accent-amber); margin-bottom: 12px;">
+            Points = 1000 * (1 - (timeElapsed / timeLimit) * 0.5)
+          </div>
+          <ul class="clean-list">
+            <li><strong>Fast Correct Answers:</strong> Correct responses submitted under 1 second scale up to 1000 maximum points.</li>
+            <li><strong>Slower Correct Answers:</strong> Scaled linearly down to 500 minimum points as the timer runs down.</li>
+            <li><strong>Incorrect or Unsubmitted:</strong> 0 points awarded with instant lock in.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Live Presenter & Danmaku Feedback Loop -->
+    <div class="slide" data-slide="7">
+      <h2>Live Slide Presenter & Feedback Loop</h2>
+      <p class="subtitle">Two way interactive slide deck engine with floating Danmaku bullet comments.</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </div>
+          <h3>Slide Sync Engine</h3>
+          <p>Host advances or rewinds presentation slides. Socket broadcasts update every student device in sub 50 milliseconds.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <h3>Danmaku Bullet Comments</h3>
+          <p>Students post live questions and comments from their phones that glide across the big projector screen in real time.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <h3>Anonymous Confused Meter</h3>
+          <p>Students tap a single button when lost. Live counter flags the exact slide number to the teacher without exposing student identity.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Project Outcomes & Roadmap -->
+    <div class="slide" data-slide="8">
+      <h2>Project Outcomes & Future Scope</h2>
+      <p class="subtitle">Demonstrated capabilities, live classroom impact, and engineering trajectory.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: var(--accent-cyan); margin-bottom: 12px;">Demonstrated Key Outcomes</h3>
+          <ul class="clean-list solution">
+            <li>Tested and verified with 50 concurrent real time connections on local Wi-Fi.</li>
+            <li>Zero account friction: 50 students join in under 30 seconds via QR scan.</li>
+            <li>Anti cheat verified: Zero question leaks to student device viewports.</li>
+            <li>Sub 100ms synchronization across quiz pad buzzers and presentation slides.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--accent-amber); margin-bottom: 12px;">Future Engineering Roadmap</h3>
+          <ul class="clean-list">
+            <li>Mathematical formula rendering using KaTeX for STEM classroom quizzes.</li>
+            <li>Session report generation exporting detailed CSV and PDF comprehension analytics.</li>
+            <li>Automated attendance tracking tied directly to student avatar check ins.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; padding: 18px 24px; background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-weight: 700; color: #ffffff;">Ready for Live Demonstration</span>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Host Projector: port 5173 &bull; Student Buzzer: local Wi-Fi IP</p>
+        </div>
+        <div style="font-weight: 700; color: var(--accent-cyan); font-size: 13px;">
+          Team Calmly Chaotic &bull; Thank You
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation Footer -->
+  <footer>
+    <div class="nav-controls">
+      <button class="nav-btn" id="prev-btn" onclick="prevSlide()">&larr; Previous</button>
+      <button class="nav-btn" id="next-btn" onclick="nextSlide()">Next &rarr;</button>
+      <span class="key-hint">[ Use Left / Right Arrow Keys or Spacebar ]</span>
+    </div>
+    <div class="slide-counter" id="slide-counter">01 / 08</div>
+  </footer>
+
+  <script>
+    // Initialize Mermaid
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#12151d',
+        primaryColor: '#1e293b',
+        primaryTextColor: '#f0f2f5',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#38bdf8',
+        secondaryColor: '#0f172a',
+        tertiaryColor: '#1e293b'
+      }
+    });
+
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('slide-counter');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    let currentSlide = 1;
+    const totalSlides = slides.length;
+
+    function updateSlide(slideNumber) {
+      if (slideNumber < 1) slideNumber = 1;
+      if (slideNumber > totalSlides) slideNumber = totalSlides;
+
+      currentSlide = slideNumber;
+
+      slides.forEach((slide) => {
+        const slideIndex = parseInt(slide.getAttribute('data-slide'), 10);
+        if (slideIndex === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      // Update counter with leading zero
+      const formattedCurrent = currentSlide < 10 ? `0${currentSlide}` : `${currentSlide}`;
+      const formattedTotal = totalSlides < 10 ? `0${totalSlides}` : `${totalSlides}`;
+      counter.textContent = `${formattedCurrent} / ${formattedTotal}`;
+
+      // Update button disabled state
+      prevBtn.style.opacity = currentSlide === 1 ? '0.4' : '1';
+      prevBtn.style.pointerEvents = currentSlide === 1 ? 'none' : 'auto';
+      nextBtn.style.opacity = currentSlide === totalSlides ? '0.4' : '1';
+      nextBtn.style.pointerEvents = currentSlide === totalSlides ? 'none' : 'auto';
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        updateSlide(currentSlide - 1);
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        updateSlide(currentSlide + 1);
+      }
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+
+    // Initial load
+    updateSlide(1);
+  </script>
+</body>
+</html>
