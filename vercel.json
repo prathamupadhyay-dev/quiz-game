@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "buildCommand": "node build-unified.js",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/admin/(.*)", "destination": "/admin/index.html" },
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/creator/(.*)", "destination": "/creator/index.html" },
+    { "source": "/creator", "destination": "/creator/index.html" },
+    { "source": "/presentor/(.*)", "destination": "/presentor/index.html" },
+    { "source": "/presentor", "destination": "/presentor/index.html" },
+    { "source": "/presenter/(.*)", "destination": "/presenter/index.html" },
+    { "source": "/presenter", "destination": "/presenter/index.html" },
+    { "source": "/moderator/(.*)", "destination": "/moderator/index.html" },
+    { "source": "/moderator", "destination": "/moderator/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

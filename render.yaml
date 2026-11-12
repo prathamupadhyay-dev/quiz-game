@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: zync-platform
+    env: node
+    plan: free
+    buildCommand: npm install && node build-unified.js
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        value: mongodb+srv://pratham:Pratham123@cluster0.ptfjooq.mongodb.net/zync?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: zync_shared_jwt_secret_key_2026

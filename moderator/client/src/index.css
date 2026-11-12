@@ -1,0 +1,137 @@
+@import './theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: var(--separator);
+    box-sizing: border-box;
+  }
+  
+  body {
+    background-color: var(--bg);
+    color: var(--label);
+    font-family: var(--font);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+}
+
+/* Typography Scale */
+.text-large-title {
+  font-size: 34px;
+  line-height: 41px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.text-title {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.text-headline {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.text-body-ios {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.text-subheadline {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.text-footnote {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+
+/* Rounded Numerals */
+.font-rounded-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Glass Surface (Toolbar, Sidebar, Sheets, Floating Controls) */
+.glass-panel {
+  background: var(--glass);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Solid Content Card */
+.content-card {
+  background: var(--surface);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-card);
+}
+
+/* iOS Interactive Motion */
+.btn-motion {
+  transition: all 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.btn-motion:hover {
+  filter: brightness(1.08);
+}
+
+.btn-motion:active {
+  transform: scale(0.97);
+}
+
+/* React Bits: StarBorder animations */
+@keyframes star-movement {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-100%, 0%);
+    opacity: 0;
+  }
+}
+
+@keyframes star-movement-reverse {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100%, 0%);
+    opacity: 0;
+  }
+}
+
+.animate-star-movement {
+  animation: star-movement 3s linear infinite alternate;
+}
+
+.animate-star-movement-reverse {
+  animation: star-movement-reverse 3s linear infinite alternate;
+}
+
+/* React Bits: ShinyText shine keyframe */
+@keyframes shine {
+  0% {
+    background-position: 100%;
+  }
+  100% {
+    background-position: -100%;
+  }
+}
