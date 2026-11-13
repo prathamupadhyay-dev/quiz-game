@@ -7,6 +7,7 @@
     "start": "node start-all.js",
     "dev": "node start-all.js",
     "build": "node build-unified.js",
+    "postinstall": "npm --prefix student/client install --no-audit && npm --prefix admin/client install --no-audit && npm --prefix principal/client install --no-audit && npm --prefix teacher/client install --no-audit && npm --prefix moderator/client install --no-audit",
     "check": "node check-all.js",
     "seed": "node admin/server/seed.js"
   },

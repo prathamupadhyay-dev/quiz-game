@@ -34,9 +34,21 @@ const APPS = [
 ];
 
 for (const app of APPS) {
-  console.log(`\n🚀 [BUILD] Building ${app.name.toUpperCase()} (base: ${app.base})...`);
+  console.log(`\n🚀 [BUILD] Preparing ${app.name.toUpperCase()} (base: ${app.base})...`);
   const appPath = path.join(ROOT_DIR, app.dir);
-  
+
+  // Auto-install dependencies if not already installed (e.g. in cloud CI like Vercel)
+  const viteBin = path.join(appPath, 'node_modules', '.bin', process.platform === 'win32' ? 'vite.cmd' : 'vite');
+  if (!fs.existsSync(viteBin)) {
+    console.log(`📦 [BUILD] Installing dependencies for ${app.name.toUpperCase()}...`);
+    execSync('npm install --no-audit --prefer-offline', {
+      cwd: appPath,
+      stdio: 'inherit',
+      shell: true
+    });
+  }
+
+  console.log(`🔨 [BUILD] Compiling ${app.name.toUpperCase()}...`);
   execSync(`npm run build -- --base ${app.base} --outDir ${app.outDir}`, {
     cwd: appPath,
     stdio: 'inherit',
