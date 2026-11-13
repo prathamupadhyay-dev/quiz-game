@@ -56,9 +56,11 @@ export default function PortalSwitcher({ current = 'user', currentUser = null })
 
   const handleSwitch = (p) => {
     if (p.id === current) return;
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (isLocalhost) {
-      window.location.href = `http://${window.location.hostname}:${p.port}`;
+    const isMultiPortDev = ['5171', '5172', '5173', '5174', '5175'].includes(window.location.port);
+    if (isMultiPortDev) {
+      const token = localStorage.getItem('zync_token') || localStorage.getItem('zync_admin_token') || '';
+      const userStr = localStorage.getItem('zync_user') || (user ? JSON.stringify(user) : '');
+      window.location.href = `http://${window.location.hostname}:${p.port}/?token=${encodeURIComponent(token)}&user=${encodeURIComponent(userStr)}`;
     } else {
       window.location.href = p.path;
     }
@@ -72,7 +74,12 @@ export default function PortalSwitcher({ current = 'user', currentUser = null })
     localStorage.removeItem('zync_teacher_token');
     localStorage.removeItem('zync_moderator_token');
     localStorage.removeItem('zync_student_token');
-    window.location.href = '/';
+    const isMultiPortDev = ['5171', '5172', '5173', '5174', '5175'].includes(window.location.port);
+    if (isMultiPortDev) {
+      window.location.href = `http://${window.location.hostname}:5172`;
+    } else {
+      window.location.href = '/';
+    }
   };
 
   return (

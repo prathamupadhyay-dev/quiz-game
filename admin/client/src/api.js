@@ -36,7 +36,11 @@ class ApiService {
       if (!response.ok) {
         if (response.status === 401) {
           this.setToken(null);
-          window.location.href = '/?redirect=/admin';
+          if (window.location.port === '5171') {
+            window.location.href = `http://${window.location.hostname}:5172/?redirect=${encodeURIComponent(`http://${window.location.hostname}:5171`)}`;
+          } else {
+            window.location.href = '/?redirect=/admin';
+          }
         }
         const error = new Error((data && data.error) || 'Request failed with status ' + response.status);
         error.status = response.status;

@@ -92,8 +92,28 @@ CRITICAL PROPORTION & ANATOMY RULES (DO NOT USE A GENERIC MANNEQUIN):
 Generate the complete, ready-to-use vector code for [CHARACTER_NAME] now.`;
 
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('zync_token') || localStorage.getItem('zync_creator_token') || localStorage.getItem('zync_principal_token'));
+  const [token, setToken] = useState(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const qToken = urlParams.get('token');
+      const qUser = urlParams.get('user');
+      if (qToken) {
+        localStorage.setItem('zync_token', qToken);
+        localStorage.setItem('zync_creator_token', qToken);
+        localStorage.setItem('zync_principal_token', qToken);
+        if (qUser) localStorage.setItem('zync_user', qUser);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return qToken;
+      }
+    } catch (e) {}
+    return localStorage.getItem('zync_token') || localStorage.getItem('zync_creator_token') || localStorage.getItem('zync_principal_token');
+  });
   const [user, setUser] = useState(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const qUser = urlParams.get('user');
+      if (qUser) return JSON.parse(qUser);
+    } catch (e) {}
     const saved = localStorage.getItem('zync_user') || localStorage.getItem('zync_creator_user') || localStorage.getItem('zync_principal_user');
     return saved ? JSON.parse(saved) : null;
   });
@@ -437,7 +457,14 @@ export default function App() {
 
   // 1. Redirect if unauthenticated
   if (!token) {
-    window.location.href = '/?redirect=/creator';
+    if (window.location.port === '5175') {
+      window.location.href = `http://${window.location.hostname}:5172/?redirect=${encodeURIComponent(`http://${window.location.hostname}:5175`)}`;
+      return null;
+    }
+    if (window.location.pathname !== '/' || !window.location.search.includes('redirect')) {
+      window.location.href = '/?redirect=/creator';
+      return null;
+    }
     return null;
   }
 

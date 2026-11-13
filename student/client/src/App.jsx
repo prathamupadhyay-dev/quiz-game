@@ -350,28 +350,60 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const redirectParam = params.get('redirect');
       const userRole = (authenticatedUser?.role || 'user').toLowerCase();
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isMultiPortDev = window.location.port === '5172';
 
       if (redirectParam) {
-        window.location.href = redirectParam;
-        return;
+        let dest = redirectParam;
+        if (isMultiPortDev) {
+          if (dest.startsWith('/')) {
+            const portMap = {
+              '/admin': '5171',
+              '/creator': '5175',
+              '/principal': '5175',
+              '/presentor': '5173',
+              '/teacher': '5173',
+              '/moderator': '5174'
+            };
+            const targetPort = portMap[dest] || '5172';
+            dest = `http://${window.location.hostname}:${targetPort}`;
+          }
+          const hasQuery = dest.includes('?');
+          window.location.href = `${dest}${hasQuery ? '&' : '?'}token=${encodeURIComponent(data.token)}&user=${encodeURIComponent(JSON.stringify(authenticatedUser))}`;
+          return;
+        } else {
+          window.location.href = dest;
+          return;
+        }
       }
 
-      if (userRole === 'admin') {
-        window.location.href = isLocal ? 'http://localhost:5171' : '/admin';
-        return;
-      }
-      if (userRole === 'creator' || userRole === 'principal') {
-        window.location.href = isLocal ? 'http://localhost:5175' : '/creator';
-        return;
-      }
-      if (userRole === 'presentor' || userRole === 'teacher') {
-        window.location.href = isLocal ? 'http://localhost:5173' : '/presentor';
-        return;
-      }
-      if (userRole === 'moderator') {
-        window.location.href = isLocal ? 'http://localhost:5174' : '/moderator';
-        return;
+      if (isMultiPortDev) {
+        const portMap = {
+          admin: '5171',
+          creator: '5175',
+          principal: '5175',
+          presentor: '5173',
+          teacher: '5173',
+          moderator: '5174'
+        };
+        const targetPort = portMap[userRole];
+        if (targetPort) {
+          window.location.href = `http://${window.location.hostname}:${targetPort}/?token=${encodeURIComponent(data.token)}&user=${encodeURIComponent(JSON.stringify(authenticatedUser))}`;
+          return;
+        }
+      } else {
+        const pathMap = {
+          admin: '/admin',
+          creator: '/creator',
+          principal: '/creator',
+          presentor: '/presentor',
+          teacher: '/presentor',
+          moderator: '/moderator'
+        };
+        const targetPath = pathMap[userRole];
+        if (targetPath) {
+          window.location.href = targetPath;
+          return;
+        }
       }
 
       setTimeout(() => {

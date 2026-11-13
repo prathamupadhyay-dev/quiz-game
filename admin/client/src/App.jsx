@@ -25,7 +25,14 @@ function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    window.location.href = '/?redirect=/admin';
+    if (window.location.port === '5171') {
+      window.location.href = `http://${window.location.hostname}:5172/?redirect=${encodeURIComponent(`http://${window.location.hostname}:5171`)}`;
+      return null;
+    }
+    if (window.location.pathname !== '/' || !window.location.search.includes('redirect')) {
+      window.location.href = '/?redirect=/admin';
+      return null;
+    }
     return null;
   }
 

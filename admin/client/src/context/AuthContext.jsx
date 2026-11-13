@@ -9,6 +9,19 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     async function initAuth() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const qToken = urlParams.get('token');
+        const qUser = urlParams.get('user');
+        if (qToken) {
+          api.setToken(qToken);
+          if (qUser) {
+            localStorage.setItem('zync_user', qUser);
+          }
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (e) {}
+
       const token = api.getToken();
       if (!token) {
         setLoading(false);
