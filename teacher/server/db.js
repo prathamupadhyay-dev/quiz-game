@@ -13,51 +13,39 @@ if (!process.env.MONGODB_URI || process.env.MONGODB_URI.trim() === '') {
 
 const mongoose = require('mongoose');
 
-const DEFAULT_URI = 'mongodb+srv://pratham:Pratham123@cluster0.ptfjooq.mongodb.net/zync?retryWrites=true&w=majority&appName=Cluster0';
+const DEFAULT_URI = 'mongodb+srv://raideninghok1_db_user:cJxdk9ZQmHAFeO8N@cluster0.ptfjooq.mongodb.net/zync?retryWrites=true&w=majority&appName=Cluster0';
 
 let isConnected = false;
 let retryTimer = null;
-let cached = global._mongoConn;
-if (!cached) {
-  cached = global._mongoConn = { conn: null, promise: null };
-}
+let connectPromise = null;
 
 async function attemptConnect() {
-  if (cached.conn && mongoose.connection.readyState === 1) {
+  if (mongoose.connection.readyState === 1) {
     isConnected = true;
     return true;
+  }
+  if (mongoose.connection.readyState === 2 && connectPromise) {
+    return await connectPromise;
   }
 
   const uri = process.env.MONGODB_URI || DEFAULT_URI;
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(uri, {
-      dbName: 'zync',
-      serverSelectionTimeoutMS: 8000,
-    }).then((m) => {
-      isConnected = true;
-      console.log('[DB] Connected to MongoDB Atlas (database: zync)');
-      return m;
-    }).catch((err) => {
-      cached.promise = null;
-      isConnected = false;
-      console.error('[DB] MongoDB connection error:', err.message);
-      scheduleRetry();
-      throw err;
-    });
-  }
-
-  try {
-    cached.conn = await cached.promise;
+  connectPromise = mongoose.connect(uri, {
+    dbName: 'zync',
+    serverSelectionTimeoutMS: 8000,
+  }).then((m) => {
     isConnected = true;
-    if (retryTimer) {
-      clearTimeout(retryTimer);
-      retryTimer = null;
-    }
+    console.log('[DB] Teacher connected to MongoDB Atlas (database: zync)');
     return true;
-  } catch (err) {
+  }).catch((err) => {
+    connectPromise = null;
+    isConnected = false;
+    console.error('[DB] Teacher MongoDB connection error:', err.message);
+    scheduleRetry();
     return false;
-  }
+  });
+
+  return await connectPromise;
 }
 
 function scheduleRetry() {
@@ -76,6 +64,8 @@ async function connectDB() {
 function getDbStatus() {
   return isConnected || mongoose.connection.readyState === 1;
 }
+
+connectDB().catch(() => {});
 
 module.exports = {
   connectDB,

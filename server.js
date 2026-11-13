@@ -53,7 +53,7 @@ connectDB();
 const User = require('./admin/server/models/User');
 
 // Universal Health check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'ok',
     service: 'zync-unified-platform',
@@ -64,7 +64,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Universal Auth - Login
-app.post('/api/auth/login', async (req, res) => {
+app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   try {
     await connectDB();
     const { email, username, password } = req.body;
@@ -126,7 +126,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Universal Auth - Register
-app.post('/api/auth/register', async (req, res) => {
+app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   try {
     await connectDB();
     const { username, password, confirmPassword } = req.body;
@@ -211,7 +211,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // Universal Auth - Me
-app.get('/api/auth/me', async (req, res) => {
+app.get(['/api/auth/me', '/auth/me'], async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -227,6 +227,23 @@ app.get('/api/auth/me', async (req, res) => {
     return res.json({ user });
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+});
+
+// Direct Student Characters endpoint
+const AnimeCategory = require('./student/server/models/AnimeCategory');
+const AnimeCharacter = require('./student/server/models/AnimeCharacter');
+app.get(['/api/student/characters', '/student/characters'], async (req, res) => {
+  try {
+    await connectDB();
+    const [categories, characters] = await Promise.all([
+      AnimeCategory.find().sort({ name: 1 }).lean().catch(() => []),
+      AnimeCharacter.find({ active: true }).sort({ createdAt: 1 }).lean().catch(() => [])
+    ]);
+    res.json({ categories: categories || [], characters: characters || [] });
+  } catch (err) {
+    console.error('Fetch student characters error in server.js:', err);
+    res.status(500).json({ error: 'Failed to retrieve characters' });
   }
 });
 

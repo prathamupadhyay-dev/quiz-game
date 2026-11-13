@@ -200,13 +200,13 @@ function generateRandomAvatarConfig() {
 // -------------------------------------------------------------
 
 // Dynamic Characters & Anime Universes from MongoDB
-app.get('/api/student/characters', requireDb, async (req, res) => {
+app.get(['/api/student/characters', '/student/characters'], requireDb, async (req, res) => {
   try {
     const [categories, characters] = await Promise.all([
       AnimeCategory.find().sort({ name: 1 }).lean(),
       AnimeCharacter.find({ active: true }).sort({ createdAt: 1 }).lean()
     ]);
-    res.json({ categories, characters });
+    res.json({ categories: categories || [], characters: characters || [] });
   } catch (err) {
     console.error('Fetch student characters error:', err);
     res.status(500).json({ error: 'Failed to retrieve characters' });
@@ -214,12 +214,12 @@ app.get('/api/student/characters', requireDb, async (req, res) => {
 });
 
 // Generate new unique random username
-app.get('/api/student/generate-username', (req, res) => {
+app.get(['/api/student/generate-username', '/student/generate-username'], (req, res) => {
   res.json({ username: generateFunUsername() });
 });
 
 // Generate new random avatar configuration (uses MongoDB dynamic characters if present)
-app.get('/api/student/generate-avatar', async (req, res) => {
+app.get(['/api/student/generate-avatar', '/student/generate-avatar'], async (req, res) => {
   try {
     const chars = await AnimeCharacter.find({ active: true }).select('characterId').lean();
     const presetOutfit = chars.length > 0
