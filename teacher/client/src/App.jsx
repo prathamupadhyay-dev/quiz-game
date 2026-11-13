@@ -3,7 +3,7 @@ import AvatarSvg from './components/AvatarSvg';
 import CharacterAvatar from './components/CharacterAvatar';
 import StarBorder from './components/reactbits/StarBorder';
 import ShinyText from './components/reactbits/ShinyText';
-import Hyperspeed from './components/reactbits/Hyperspeed';
+import Squares from './components/reactbits/Squares';
 import PortalSwitcher from './components/PortalSwitcher';
 import {
   Triangle,
@@ -563,10 +563,14 @@ export default function App() {
       <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden select-none">
         {/* Universal Top Role-Based Portal Switcher */}
         <PortalSwitcher current="presentor" currentUser={user} />
-        {/* Hyperspeed Cosmic Background */}
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <Hyperspeed effectOptions={hyperspeedConfig} />
-        </div>
+        {/* React Bits: Squares Interactive Drift Grid (Emerald Cubic Theme) */}
+        <Squares
+          direction="diagonal"
+          speed={0.35}
+          squareSize={44}
+          borderColor="rgba(255, 255, 255, 0.04)"
+          hoverFillColor="rgba(52, 211, 153, 0.22)"
+        />
 
         {/* Ambient Spotlight Aura */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[180px] pointer-events-none z-1" />
@@ -1222,16 +1226,22 @@ export default function App() {
   // 3. Presentor Dashboard View
   return (
     <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden select-none">
-      {/* Hyperspeed Cosmic Background */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <Hyperspeed effectOptions={hyperspeedConfig} />
-      </div>
+      {/* React Bits: Squares Interactive Drift Grid (Emerald Aesthetic) */}
+      <Squares
+        direction="diagonal"
+        speed={0.35}
+        squareSize={44}
+        borderColor="rgba(255, 255, 255, 0.04)"
+        hoverFillColor="rgba(52, 211, 153, 0.22)"
+      />
 
       {/* Ambient Top Spotlight */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[180px] pointer-events-none z-1" />
 
-      {/* Top Navbar matching admin, principal, moderator */}
+      {/* Fixed Top-Right Unified ZYNC Control Pod */}
       <PortalSwitcher current="presentor" currentUser={user} />
+
+      {/* Top Navbar */}
       <header className="relative z-10 h-16 flex items-center justify-between px-6 sm:px-8 bg-[#121214]/85 backdrop-blur-2xl border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black shadow-md shadow-emerald-500/30">
@@ -1240,26 +1250,9 @@ export default function App() {
           <span className="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
             <ShinyText text="ZYNC" speed={3} />
             <span className="text-xs font-mono font-bold tracking-widest uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Presentor
+              Presenter
             </span>
           </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {user && (
-            <div className="flex items-center gap-2.5 bg-white/[0.05] px-4 py-2 rounded-2xl border border-white/10">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />
-              <span className="text-xs font-bold text-white">{user.name || user.email}</span>
-            </div>
-          )}
-          <button
-            onClick={handleLogout}
-            className="h-10 px-4 rounded-2xl bg-white/[0.05] hover:bg-red-500/15 border border-white/10 hover:border-red-500/30 text-neutral-300 hover:text-red-400 font-bold text-xs flex items-center gap-2 transition cursor-pointer active:scale-95"
-            title="Sign Out"
-          >
-            <LogOut size={15} />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
         </div>
       </header>
 
@@ -1270,19 +1263,6 @@ export default function App() {
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">Quizzes</h1>
             <p className="text-xs sm:text-sm text-white/50 font-medium">Launch live classroom quiz games with custom countdowns</p>
           </div>
-
-          <StarBorder
-            as="button"
-            onClick={() => setShowCreateModal(true)}
-            color="#10B981"
-            speed="3s"
-            className="cursor-pointer active:scale-95 transition-transform shadow-xl shadow-emerald-500/20"
-          >
-            <div className="px-6 py-3 font-black text-sm tracking-wide text-white flex items-center gap-2">
-              <Plus size={18} className="stroke-[3]" />
-              <span>Create</span>
-            </div>
-          </StarBorder>
         </div>
 
         {/* Quizzes Grid */}
@@ -1343,7 +1323,7 @@ export default function App() {
           ) : (
             <div className="col-span-full py-16 text-center text-neutral-500 space-y-3">
               <Presentation size={36} className="mx-auto text-neutral-600" />
-              <p className="text-sm">No quizzes found. Click Create above to build your first quiz.</p>
+              <p className="text-sm">No quizzes found. Create quizzes in the Creator module to present them here.</p>
             </div>
           )}
         </div>

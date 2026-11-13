@@ -1110,17 +1110,6 @@ export default function App() {
         {/* Ambient Spotlight */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#5E5CE6]/15 rounded-full blur-[120px] pointer-events-none z-1" />
 
-        {/* Top Floating Controls */}
-        <header className="w-full flex justify-end z-20">
-          <button
-            onClick={handleSignOut}
-            title="Sign Out"
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/40 hover:text-white transition-all cursor-pointer"
-          >
-            <LogOut size={15} />
-          </button>
-        </header>
-
         {/* Main Stage Arena: Single Permanent 2-Column Grid (Zero Character Jumping) */}
         <main className="w-full max-w-6xl mx-auto flex-1 flex items-center justify-center z-10 min-h-0 px-3 sm:px-6 py-4">
           <div className="w-full max-w-5xl mx-auto flex flex-col-reverse md:flex-row items-center justify-center gap-10 sm:gap-14 md:gap-16">

@@ -3,7 +3,7 @@ import AvatarSvg from './components/AvatarSvg';
 import CharacterAvatar from './components/CharacterAvatar';
 import StarBorder from './components/reactbits/StarBorder';
 import ShinyText from './components/reactbits/ShinyText';
-import Hyperspeed from './components/reactbits/Hyperspeed';
+import Squares from './components/reactbits/Squares';
 import PortalSwitcher from './components/PortalSwitcher';
 import {
   ShieldAlert,
@@ -443,10 +443,14 @@ export default function App() {
 
     return (
       <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden select-none">
-        {/* Hyperspeed Cosmic Background */}
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <Hyperspeed effectOptions={hyperspeedConfig} />
-        </div>
+        {/* React Bits: Squares Interactive Drift Grid (Purple Cubic Theme) */}
+        <Squares
+          direction="diagonal"
+          speed={0.35}
+          squareSize={44}
+          borderColor="rgba(255, 255, 255, 0.04)"
+          hoverFillColor="rgba(168, 85, 247, 0.22)"
+        />
 
         {/* Top Navbar */}
         <PortalSwitcher current="moderator" currentUser={user} />
@@ -801,10 +805,14 @@ export default function App() {
       {/* Universal Top Role-Based Portal Switcher */}
       <PortalSwitcher current="moderator" currentUser={user} />
 
-      {/* Hyperspeed Cosmic Background */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <Hyperspeed effectOptions={hyperspeedConfig} />
-      </div>
+      {/* React Bits: Squares Interactive Drift Grid (Purple Cubic Theme) */}
+      <Squares
+        direction="diagonal"
+        speed={0.35}
+        squareSize={44}
+        borderColor="rgba(255, 255, 255, 0.04)"
+        hoverFillColor="rgba(168, 85, 247, 0.22)"
+      />
 
       {/* Ambient Top Spotlight */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-500/10 rounded-full blur-[180px] pointer-events-none z-1" />
@@ -821,23 +829,6 @@ export default function App() {
               Moderator
             </span>
           </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {user && (
-            <div className="flex items-center gap-2.5 bg-white/[0.05] px-4 py-2 rounded-2xl border border-white/10">
-              <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_#A855F7]" />
-              <span className="text-xs font-bold text-white">{user.name || user.email}</span>
-            </div>
-          )}
-          <button
-            onClick={handleLogout}
-            className="h-10 px-4 rounded-2xl bg-white/[0.05] hover:bg-red-500/15 border border-white/10 hover:border-red-500/30 text-neutral-300 hover:text-red-400 font-bold text-xs flex items-center gap-2 transition cursor-pointer active:scale-95"
-            title="Sign Out"
-          >
-            <LogOut size={15} />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
         </div>
       </header>
 

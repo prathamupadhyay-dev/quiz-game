@@ -29,24 +29,6 @@ export default function Navbar({ onToggleSidebar }) {
           </span>
         </div>
       </div>
-
-      <div className="flex items-center gap-3">
-        {user && (
-          <div className="flex items-center gap-2.5 bg-white/[0.05] px-4 py-2 rounded-2xl border border-white/10">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]"></span>
-            <span className="text-xs font-bold text-white">{user.name || user.email}</span>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={logout}
-          className="h-10 px-4 rounded-2xl bg-white/[0.05] hover:bg-red-500/15 border border-white/10 hover:border-red-500/30 text-neutral-300 hover:text-red-400 font-bold text-xs flex items-center gap-2 transition cursor-pointer active:scale-95"
-          title="Sign Out"
-        >
-          <LogOut size={15} />
-          <span className="hidden sm:inline">Sign Out</span>
-        </button>
-      </div>
     </header>
   );
 }

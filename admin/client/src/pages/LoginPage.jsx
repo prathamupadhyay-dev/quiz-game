@@ -60,9 +60,6 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-1" />
 
       <div className="w-full max-w-sm bg-[#121214]/90 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl relative z-10 flex flex-col items-center">
-        {/* Universal Portal Switcher */}
-        <PortalSwitcher current="admin" />
-
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#06B6D4] flex items-center justify-center text-white mb-3 shadow-lg shadow-[#5E5CE6]/30">
             <Shield size={28} strokeWidth={2} />

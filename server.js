@@ -268,6 +268,41 @@ app.get(['/api/auth/me', '/auth/me'], async (req, res) => {
   }
 });
 
+// Universal Auth - Change Password
+app.post(['/api/auth/change-password', '/auth/change-password'], async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authorization token required' });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    await connectDB();
+
+    const { newPassword, confirmPassword } = req.body;
+    if (!newPassword || newPassword.length < 4) {
+      return res.status(400).json({ error: 'New password must be at least 4 characters long' });
+    }
+    if (confirmPassword && newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    const user = await User.findById(decoded.userId || decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User account not found' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    return res.json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Universal change-password error:', err);
+    return res.status(500).json({ error: 'Failed to update password' });
+  }
+});
+
 // Student Helpers
 function generateFunUsername() {
   const prefixes = ['Cosmic', 'Pixel', 'Neon', 'Turbo', 'Cyber', 'Quantum', 'Star', 'Sonic', 'Flash', 'Alpha', 'Shadow', 'Solar', 'Lunar', 'Thunder', 'Apex'];
