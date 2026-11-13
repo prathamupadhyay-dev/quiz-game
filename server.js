@@ -76,15 +76,15 @@ app.get(['/api/health', '/health'], (req, res) => {
 app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   try {
     await connectDB();
-    const { email, username, password } = req.body;
-    const identifier = (email || username || '').toLowerCase().trim();
+    const { username, password } = req.body;
+    const identifier = (username || req.body.email || '').toLowerCase().trim();
 
     if (!identifier || !password) {
-      return res.status(400).json({ error: 'Username/Email and password are required' });
+      return res.status(400).json({ error: 'Username and password are required' });
     }
 
     const user = await User.findOne({
-      $or: [{ email: identifier }, { username: identifier }]
+      $or: [{ username: identifier }, { email: identifier }]
     });
 
     if (!user) {
@@ -108,8 +108,7 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
         userId: user._id,
         id: user._id,
         role: user.role,
-        username: user.username,
-        email: user.email
+        username: user.username
       },
       JWT_SECRET,
       { expiresIn: '7d' }
@@ -120,7 +119,6 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
       _id: user._id,
       username: user.username,
       name: user.name,
-      email: user.email,
       role: user.role,
       avatarConfig: user.avatarConfig,
       access: user.access
@@ -166,20 +164,12 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
-    // Ensure email is unique
-    let userEmail = `${cleanUsername}@zync.local`;
-    const existingEmail = await User.findOne({ email: userEmail });
-    if (existingEmail) {
-      userEmail = `${cleanUsername}_${Date.now().toString(36)}@zync.local`;
-    }
-
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
     const newUser = await User.create({
       username: cleanUsername,
       name: cleanUsername,
-      email: userEmail,
       passwordHash,
       role: 'user',
       avatarConfig: {
@@ -203,8 +193,7 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
         userId: newUser._id,
         id: newUser._id,
         role: newUser.role,
-        username: newUser.username,
-        email: newUser.email
+        username: newUser.username
       },
       JWT_SECRET,
       { expiresIn: '7d' }
@@ -215,7 +204,6 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
       _id: newUser._id,
       username: newUser.username,
       name: newUser.name,
-      email: newUser.email,
       role: newUser.role,
       avatarConfig: newUser.avatarConfig,
       access: newUser.access
@@ -257,7 +245,6 @@ app.get(['/api/auth/me', '/auth/me'], async (req, res) => {
       _id: user._id,
       username: user.username,
       name: user.name,
-      email: user.email,
       role: user.role,
       avatarConfig: user.avatarConfig,
       access: user.access
@@ -300,6 +287,66 @@ app.post(['/api/auth/change-password', '/auth/change-password'], async (req, res
   } catch (err) {
     console.error('Universal change-password error:', err);
     return res.status(500).json({ error: 'Failed to update password' });
+  }
+});
+
+// Universal Auth - Change Username
+app.post(['/api/auth/change-username', '/auth/change-username'], async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authorization token required' });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    await connectDB();
+
+    const { newUsername } = req.body;
+    if (!newUsername) {
+      return res.status(400).json({ error: 'New username is required' });
+    }
+
+    const clean = newUsername.toLowerCase().trim();
+    if (!/^[a-z0-9_]{3,24}$/.test(clean)) {
+      return res.status(400).json({
+        error: 'Username must be 3-24 characters and only contain lowercase letters, numbers, and underscores (_)'
+      });
+    }
+
+    const targetUserId = decoded.userId || decoded.id;
+    const existing = await User.findOne({ username: clean });
+    if (existing && existing._id.toString() !== targetUserId.toString()) {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+
+    const user = await User.findById(targetUserId);
+    if (!user) {
+      return res.status(404).json({ error: 'User account not found' });
+    }
+
+    user.username = clean;
+    user.name = clean;
+    await user.save();
+
+    const userPayload = {
+      id: user._id,
+      _id: user._id,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      avatarConfig: user.avatarConfig,
+      access: user.access
+    };
+
+    return res.json({
+      success: true,
+      message: 'Username updated successfully',
+      user: userPayload,
+      student: userPayload
+    });
+  } catch (err) {
+    console.error('Universal change-username error:', err);
+    return res.status(500).json({ error: 'Failed to update username' });
   }
 });
 

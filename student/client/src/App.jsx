@@ -171,11 +171,26 @@ export default function App() {
   }, []);
 
   // -------------------------------------------------------------
-  // STATE: USERNAME EDITING (BUBBLE ONLY)
+  // STATE: IN-GAME MATCH NICKNAME (SEPARATE FROM ACCOUNT USERNAME)
   // -------------------------------------------------------------
-  const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [newUsername, setNewUsername] = useState('');
-  const [usernameError, setUsernameError] = useState('');
+  const [gameNickname, setGameNickname] = useState(() => {
+    try {
+      const saved = localStorage.getItem('zync_user');
+      const u = saved ? JSON.parse(saved) : null;
+      return u?.username || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [tempNickname, setTempNickname] = useState('');
+  const [nicknameError, setNicknameError] = useState('');
+
+  useEffect(() => {
+    if (student?.username && !gameNickname) {
+      setGameNickname(student.username);
+    }
+  }, [student?.username]);
 
   // -------------------------------------------------------------
   // STATE: ROOM PIN & IN-GAME SESSION
@@ -244,38 +259,6 @@ export default function App() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to authenticate');
-
-      localStorage.setItem('zync_student_auth_token', data.token);
-      setAuthToken(data.token);
-      setStudent(data.student);
-      if (data.student.avatarConfig) {
-        setAvatarConfig(data.student.avatarConfig);
-      }
-    } catch (err) {
-      setAuthError(err.message);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  // One-Click Google / Guest Auth (No 401 popups)
-  const handleDirectAuth = async (isGoogle = false) => {
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const randomNum = Math.floor(10 + Math.random() * 90);
-      const res = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          demoUser: {
-            email: isGoogle ? `google_student_${randomNum}@gmail.com` : `guest_${randomNum}@zync.app`,
-            name: isGoogle ? `Google Student ${randomNum}` : `Guest ${randomNum}`
-          }
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to sign in');
 
       localStorage.setItem('zync_student_auth_token', data.token);
       setAuthToken(data.token);
@@ -461,22 +444,6 @@ export default function App() {
     }
   };
 
-  // Cinematic guest sequence with Hyperspeed warp
-  const handleStartGuest = async () => {
-    setIsWarping(true);
-    setAuthError('');
-
-    try {
-      await handleDirectAuth(false);
-      setTimeout(() => {
-        setShowStage(true);
-        setIsWarping(false);
-      }, 950);
-    } catch (err) {
-      setIsWarping(false);
-    }
-  };
-
   const handleSignOut = () => {
     localStorage.removeItem('zync_student_auth_token');
     localStorage.removeItem('zync_student_session');
@@ -489,23 +456,19 @@ export default function App() {
     setIsWarping(false);
   };
 
-  // 1-Click Auto-generate new gamertag username
-  const handleRandomizeUsername = async () => {
+  // 1-Click Auto-generate new match nickname (in-game display only, does not change account username)
+  const handleRandomizeNickname = async () => {
     try {
       const res = await fetch('/api/student/generate-username');
       const data = await res.json();
-      if (data.username && authToken) {
-        await fetch('/api/student/profile', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authToken}`
-          },
-          body: JSON.stringify({ username: data.username })
-        });
-        setStudent(prev => ({ ...prev, username: data.username }));
+      if (data.username) {
+        setGameNickname(data.username);
       }
-    } catch (e) {}
+    } catch (e) {
+      const fallbackNames = ['ShadowNinja', 'CyberPulse', 'NeonVortex', 'PixelTiger', 'NovaStrike', 'QuantumRider'];
+      const randomName = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + Math.floor(Math.random() * 99 + 1);
+      setGameNickname(randomName);
+    }
   };
 
   // 1-Click Auto-generate new avatar outfit
@@ -608,28 +571,21 @@ export default function App() {
   };
 
   // -------------------------------------------------------------
-  // UPDATE USERNAME (BUBBLE)
+  // UPDATE MATCH NICKNAME (IN-GAME DISPLAY ONLY)
   // -------------------------------------------------------------
-  const handleSaveUsername = async () => {
-    if (!newUsername.trim()) return;
-    setUsernameError('');
-    try {
-      const res = await fetch('/api/student/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`
-        },
-        body: JSON.stringify({ username: newUsername.trim() })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Username already taken');
-
-      setStudent(data.student);
-      setIsEditingUsername(false);
-    } catch (err) {
-      setUsernameError(err.message);
+  const handleSaveNickname = () => {
+    const clean = tempNickname.trim();
+    if (!clean) {
+      setNicknameError('Nickname cannot be empty');
+      return;
     }
+    if (clean.length < 2 || clean.length > 24) {
+      setNicknameError('Nickname must be 2-24 characters');
+      return;
+    }
+    setGameNickname(clean);
+    setNicknameError('');
+    setIsEditingNickname(false);
   };
 
   // -------------------------------------------------------------
@@ -646,12 +602,13 @@ export default function App() {
     setJoinError('');
 
     try {
+      const matchNickname = (gameNickname || student?.username || `Player${Math.floor(Math.random() * 1000)}`).trim();
       const res = await fetch('/api/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pin: pin.trim(),
-          nickname: student ? student.username : `Player${Math.floor(Math.random() * 1000)}`,
+          nickname: matchNickname,
           avatarConfig,
           studentId: student ? student._id : null
         })
@@ -665,7 +622,7 @@ export default function App() {
       const sessionData = {
         sessionToken: data.player.sessionToken,
         playerId: data.player._id,
-        nickname: data.player.nickname,
+        nickname: data.player.nickname || matchNickname,
         avatarConfig: data.player.avatarConfig || avatarConfig,
         pin: data.game.pin,
         gameId: data.game._id
@@ -686,7 +643,7 @@ export default function App() {
     const token = session?.sessionToken;
     const pId = session?.playerId;
     const pPin = session?.pin || gameState?.pin || pin;
-    const pNickname = session?.nickname || student?.username;
+    const pNickname = session?.nickname || gameNickname || student?.username;
     const sId = student?._id || null;
 
     localStorage.removeItem('zync_student_session');
@@ -969,7 +926,7 @@ export default function App() {
           </h1>
 
           <p className="text-xs text-neutral-400 font-medium mb-4">
-            {authMode === 'login' ? 'Sign in to access your avatar and quizzes' : 'Create your unique student account'}
+            {authMode === 'login' ? 'Sign in to access your avatar and quizzes' : 'Create your unique user account'}
           </p>
 
           {authError && (
@@ -1128,8 +1085,14 @@ export default function App() {
                     transition={{ duration: 0.18 }}
                     className="w-full flex flex-col gap-5 sm:gap-6"
                   >
-                    {/* 1. Sleek ReactBits Username Bubble + Dice Button (Symmetrical with Code Row) */}
+                    {/* 1. Sleek ReactBits In-Game Match Nickname Bubble + Dice Button (Symmetrical with Code Row) */}
                     <div className="flex flex-col gap-1.5 w-full">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">
+                          Game Nickname <span className="text-neutral-500">(visible in match)</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-indigo-400/80">Click to change</span>
+                      </div>
                       <div className="flex items-center gap-3.5 w-full">
                         <StarBorder
                           as="div"
@@ -1138,34 +1101,34 @@ export default function App() {
                           className="flex-1 shadow-2xl"
                           innerClassName="h-14 sm:h-16 px-5 sm:px-6 flex items-center justify-between"
                         >
-                          {isEditingUsername ? (
+                          {isEditingNickname ? (
                             <div className="flex items-center gap-2 w-full">
                               <input
                                 type="text"
-                                value={newUsername}
-                                onChange={e => setNewUsername(e.target.value)}
+                                value={tempNickname}
+                                onChange={e => setTempNickname(e.target.value)}
                                 onKeyDown={e => {
-                                  if (e.key === 'Enter') handleSaveUsername();
-                                  if (e.key === 'Escape') setIsEditingUsername(false);
+                                  if (e.key === 'Enter') handleSaveNickname();
+                                  if (e.key === 'Escape') setIsEditingNickname(false);
                                 }}
-                                maxLength={20}
-                                placeholder="Enter username"
+                                maxLength={24}
+                                placeholder="Enter match nickname"
                                 className="bg-transparent border-none text-white text-base sm:text-lg font-bold px-1 focus:outline-none flex-1 font-mono tracking-wide"
                                 autoFocus
                               />
                               {/* Green Tick Button on right */}
                               <button
                                 type="button"
-                                onClick={handleSaveUsername}
+                                onClick={handleSaveNickname}
                                 className="w-8 h-8 rounded-full bg-[#30D158] text-black hover:brightness-110 flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95 flex-shrink-0"
-                                title="Save Username"
+                                title="Set Game Nickname"
                               >
                                 <Check size={16} className="stroke-[3]" />
                               </button>
                               {/* Red Cross Button on right */}
                               <button
                                 type="button"
-                                onClick={() => setIsEditingUsername(false)}
+                                onClick={() => setIsEditingNickname(false)}
                                 className="w-8 h-8 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 flex items-center justify-center transition-all cursor-pointer border border-red-500/30 active:scale-95 flex-shrink-0"
                                 title="Cancel"
                               >
@@ -1176,14 +1139,14 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => {
-                                setNewUsername(student.username);
-                                setIsEditingUsername(true);
+                                setTempNickname(gameNickname || student?.username || '');
+                                setIsEditingNickname(true);
                               }}
                               className="flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer group text-center w-full truncate py-1"
-                              title="Click to Edit Username"
+                              title="Click to Edit In-Game Nickname"
                             >
                               <ShinyText
-                                text={student.username}
+                                text={gameNickname || student?.username || 'Player'}
                                 speed={3.5}
                                 className="font-black text-lg sm:text-xl text-white tracking-wider truncate"
                               />
@@ -1191,19 +1154,19 @@ export default function App() {
                           )}
                         </StarBorder>
 
-                        {/* 1-Click Auto-Generate Username Button (OUTSIDE the bubble, perfectly symmetric with Join button below) */}
+                        {/* 1-Click Auto-Generate Nickname Button (OUTSIDE the bubble, perfectly symmetric with Join button below) */}
                         <button
                           type="button"
-                          onClick={handleRandomizeUsername}
-                          title="Auto-Generate Username"
+                          onClick={handleRandomizeNickname}
+                          title="Auto-Generate In-Game Nickname"
                           className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#141416]/90 backdrop-blur-3xl border border-white/10 hover:border-[#5E5CE6]/60 text-white/70 hover:text-white transition-all cursor-pointer flex items-center justify-center shadow-2xl active:scale-95 flex-shrink-0 hover:shadow-[0_0_20px_rgba(94,92,230,0.3)]"
                         >
                           <Dices size={22} className="text-[#5E5CE6]" />
                         </button>
                       </div>
 
-                      {usernameError && (
-                        <p className="text-red-400 text-xs font-semibold px-4">{usernameError}</p>
+                      {nicknameError && (
+                        <p className="text-red-400 text-xs font-semibold px-4">{nicknameError}</p>
                       )}
                     </div>
 
@@ -2352,7 +2315,7 @@ export default function App() {
                     }}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34D399]" />
-                    <span className="font-bold text-indigo-300">{c.author || 'Student'}:</span>
+                    <span className="font-bold text-indigo-300">{c.author || 'User'}:</span>
                     <span>{c.text}</span>
                   </div>
                 );
