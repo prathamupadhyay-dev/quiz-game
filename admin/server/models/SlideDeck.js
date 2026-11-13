@@ -35,4 +35,4 @@ const slideDeckSchema = new mongoose.Schema({
   collection: 'slideDecks'
 });
 
-module.exports = mongoose.model('SlideDeck', slideDeckSchema);
+module.exports = mongoose.models.SlideDeck || mongoose.model('SlideDeck', slideDeckSchema);

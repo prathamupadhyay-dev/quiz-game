@@ -71,4 +71,4 @@ playerSchema.index({ gameId: 1 });
 playerSchema.index({ status: 1 });
 playerSchema.index({ sessionToken: 1 });
 
-module.exports = mongoose.model('Player', playerSchema);
+module.exports = mongoose.models.Player || mongoose.model('Player', playerSchema);

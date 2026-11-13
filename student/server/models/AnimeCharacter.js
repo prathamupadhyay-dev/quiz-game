@@ -65,4 +65,4 @@ const animeCharacterSchema = new mongoose.Schema({
   collection: 'anime_characters'
 });
 
-module.exports = mongoose.model('AnimeCharacter', animeCharacterSchema);
+module.exports = mongoose.models.AnimeCharacter || mongoose.model('AnimeCharacter', animeCharacterSchema);

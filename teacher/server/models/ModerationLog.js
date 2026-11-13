@@ -33,4 +33,4 @@ const moderationLogSchema = new mongoose.Schema({
   collection: 'moderationLogs'
 });
 
-module.exports = mongoose.model('ModerationLog', moderationLogSchema);
+module.exports = mongoose.models.ModerationLog || mongoose.model('ModerationLog', moderationLogSchema);

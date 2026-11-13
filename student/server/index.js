@@ -30,26 +30,8 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
-const allowedOrigins = [
-  'http://localhost:5171',
-  'http://localhost:5172',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175'
-];
-
-if (process.env.CLIENT_ORIGIN && !allowedOrigins.includes(process.env.CLIENT_ORIGIN)) {
-  allowedOrigins.push(process.env.CLIENT_ORIGIN);
-}
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    return callback(new Error('CORS policy: Not allowed by Access-Control-Allow-Origin'));
-  },
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-session-token']
@@ -446,7 +428,7 @@ app.post('/api/auth/google', requireDb, async (req, res) => {
 });
 
 // Get Student Me
-app.get('/api/student/me', requireDb, requireStudentAuth, async (req, res) => {
+app.get(['/api/student/me', '/student/me'], requireDb, requireStudentAuth, async (req, res) => {
   try {
     const id = req.studentUser.userId || req.studentUser.studentId;
     let user = await User.findById(id).select('-passwordHash');
@@ -475,7 +457,7 @@ app.get('/api/student/me', requireDb, requireStudentAuth, async (req, res) => {
 });
 
 // Update Student Profile (Username and/or Wardrobe Avatar Config)
-app.put('/api/student/profile', requireDb, requireStudentAuth, async (req, res) => {
+app.put(['/api/student/profile', '/student/profile'], requireDb, requireStudentAuth, async (req, res) => {
   try {
     const id = req.studentUser.userId || req.studentUser.studentId;
     const { username, avatarConfig } = req.body;

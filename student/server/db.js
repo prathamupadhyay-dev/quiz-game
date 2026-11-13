@@ -24,8 +24,10 @@ async function attemptConnect() {
     isConnected = true;
     return true;
   }
-  if (mongoose.connection.readyState === 2 && connectPromise) {
-    return await connectPromise;
+  if (mongoose.connection.readyState === 2) {
+    await mongoose.connection.asPromise().catch(() => {});
+    isConnected = mongoose.connection.readyState === 1;
+    return isConnected;
   }
 
   const uri = process.env.MONGODB_URI || DEFAULT_URI;

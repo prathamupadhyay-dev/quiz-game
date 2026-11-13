@@ -33,4 +33,4 @@ const doubtSchema = new mongoose.Schema({
   collection: 'doubts'
 });
 
-module.exports = mongoose.model('Doubt', doubtSchema);
+module.exports = mongoose.models.Doubt || mongoose.model('Doubt', doubtSchema);

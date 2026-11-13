@@ -23,4 +23,4 @@ const repeatSchema = new mongoose.Schema({
   collection: 'repeats'
 });
 
-module.exports = mongoose.model('Repeat', repeatSchema);
+module.exports = mongoose.models.Repeat || mongoose.model('Repeat', repeatSchema);

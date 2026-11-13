@@ -23,4 +23,4 @@ const confusedSchema = new mongoose.Schema({
   collection: 'confused'
 });
 
-module.exports = mongoose.model('Confused', confusedSchema);
+module.exports = mongoose.models.Confused || mongoose.model('Confused', confusedSchema);

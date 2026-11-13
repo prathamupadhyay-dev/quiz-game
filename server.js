@@ -48,7 +48,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Universal API URL Normalizer for Vercel Serverless
 app.use((req, res, next) => {
   const matched = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-vercel-matched-path'];
-  if (matched && !matched.endsWith('.js') && !matched.endsWith('.html') && matched.startsWith('/api')) {
+  if (matched && !matched.endsWith('.js') && !matched.endsWith('.html') && matched.startsWith('/api') && matched !== '/api' && matched !== '/api/') {
     req.url = matched;
   }
   next();
@@ -115,18 +115,21 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const userPayload = {
+      id: user._id,
+      _id: user._id,
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatarConfig: user.avatarConfig,
+      access: user.access
+    };
+
     return res.json({
       token,
-      user: {
-        id: user._id,
-        _id: user._id,
-        username: user.username,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatarConfig: user.avatarConfig,
-        access: user.access
-      }
+      user: userPayload,
+      student: userPayload
     });
   } catch (err) {
     console.error('Universal login error:', err);
@@ -163,13 +166,20 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
+    // Ensure email is unique
+    let userEmail = `${cleanUsername}@zync.local`;
+    const existingEmail = await User.findOne({ email: userEmail });
+    if (existingEmail) {
+      userEmail = `${cleanUsername}_${Date.now().toString(36)}@zync.local`;
+    }
+
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
     const newUser = await User.create({
       username: cleanUsername,
       name: cleanUsername,
-      email: `${cleanUsername}@zync.local`,
+      email: userEmail,
       passwordHash,
       role: 'user',
       avatarConfig: {
@@ -200,22 +210,31 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const userPayload = {
+      id: newUser._id,
+      _id: newUser._id,
+      username: newUser.username,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      avatarConfig: newUser.avatarConfig,
+      access: newUser.access
+    };
+
     return res.status(201).json({
       token,
-      user: {
-        id: newUser._id,
-        _id: newUser._id,
-        username: newUser.username,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        avatarConfig: newUser.avatarConfig,
-        access: newUser.access
-      }
+      user: userPayload,
+      student: userPayload
     });
   } catch (err) {
     console.error('Universal register error:', err);
-    return res.status(500).json({ error: 'Internal server error during registration' });
+    if (err.code === 11000) {
+      const isEmail = err.message?.includes('email') || (err.keyPattern && err.keyPattern.email);
+      return res.status(409).json({
+        error: isEmail ? 'An account with this email already exists' : 'Username already taken'
+      });
+    }
+    return res.status(500).json({ error: err.message || 'Internal server error during registration' });
   }
 });
 
@@ -233,15 +252,65 @@ app.get(['/api/auth/me', '/auth/me'], async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    return res.json({ user });
+    const userPayload = {
+      id: user._id,
+      _id: user._id,
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatarConfig: user.avatarConfig,
+      access: user.access
+    };
+    return res.json({ user: userPayload, student: userPayload });
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 });
 
-// Direct Student Characters endpoint
+// Student Helpers
+function generateFunUsername() {
+  const prefixes = ['Cosmic', 'Pixel', 'Neon', 'Turbo', 'Cyber', 'Quantum', 'Star', 'Sonic', 'Flash', 'Alpha', 'Shadow', 'Solar', 'Lunar', 'Thunder', 'Apex'];
+  const nouns = ['Fox', 'Knight', 'Falcon', 'Panda', 'Tiger', 'Eagle', 'Dragon', 'Wizard', 'Cheetah', 'Wolf', 'Ranger', 'Striker', 'Phoenix', 'Ninja', 'Rider'];
+  const num = Math.floor(10 + Math.random() * 90);
+  const p = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const n = nouns[Math.floor(Math.random() * nouns.length)];
+  return `${p}${n}${num}`;
+}
+
+function generateRandomAvatarConfig() {
+  const skins = ['#FFDFD3', '#F5C7A9', '#D4A373', '#A9714B', '#7B4B28', '#462B17', '#67E8F9', '#D8B4FE'];
+  const hairStyles = ['curly', 'buzz', 'ponytail', 'undercut', 'spiky', 'afro', 'wavy'];
+  const hairColors = ['#24252D', '#4A2E1B', '#E6BE68', '#A03522', '#FF85A1', '#00E5FF', '#8B5CF6', '#CBD5E1'];
+  const expressions = ['smile', 'winking', 'cool', 'cheerful', 'focused', 'surprised'];
+  const topTypes = ['hoodie', 'tshirt', 'jacket', 'jersey', 'formal'];
+  const topColors = ['#5E5CE6', '#0A84FF', '#06B6D4', '#30D158', '#FF9F0A', '#FF453A', '#EC4899', '#18181B'];
+  const bottomTypes = ['jeans', 'joggers', 'shorts', 'skirt'];
+  const bottomColors = ['#1E293B', '#2563EB', '#0F172A', '#64748B', '#78716C'];
+  const shoesTypes = ['sneakers', 'highTops', 'boots', 'slides'];
+  const accessories = ['none', 'none', 'glasses', 'sunglasses', 'headphones', 'cap', 'beanie', 'crown', 'halo'];
+  const animePresets = ['naruto', 'sasuke', 'sakura', 'obito', 'itachi', 'kakashi'];
+  const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+  return {
+    skinColor: rand(skins),
+    hairStyle: rand(hairStyles),
+    hairColor: rand(hairColors),
+    faceExpression: rand(expressions),
+    topType: rand(topTypes),
+    topColor: rand(topColors),
+    bottomType: rand(bottomTypes),
+    bottomColor: rand(bottomColors),
+    shoesType: rand(shoesTypes),
+    shoesColor: '#F8FAFC',
+    accessory: rand(accessories),
+    presetOutfit: rand(animePresets)
+  };
+}
+
+// Direct Student Endpoints
 const AnimeCategory = require('./student/server/models/AnimeCategory');
 const AnimeCharacter = require('./student/server/models/AnimeCharacter');
+
 app.get(['/api/student/characters', '/student/characters'], async (req, res) => {
   try {
     await connectDB();
@@ -253,6 +322,123 @@ app.get(['/api/student/characters', '/student/characters'], async (req, res) => 
   } catch (err) {
     console.error('Fetch student characters error in server.js:', err);
     res.status(500).json({ error: 'Failed to retrieve characters' });
+  }
+});
+
+app.get(['/api/student/me', '/student/me'], async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Student authentication token required' });
+    }
+    const token = authHeader.split(' ')[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Invalid or expired student session' });
+    }
+    await connectDB();
+    const id = decoded.userId || decoded.studentId || decoded.id;
+    let user = await User.findById(id).select('-passwordHash');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    user.lastOnline = new Date();
+    await user.save().catch(() => {});
+    return res.json({
+      student: {
+        _id: user._id,
+        id: user._id,
+        username: user.username || user.name,
+        name: user.name,
+        avatarConfig: user.avatarConfig || generateRandomAvatarConfig(),
+        role: user.role || 'user'
+      }
+    });
+  } catch (err) {
+    console.error('Fetch student profile error:', err);
+    return res.status(500).json({ error: 'Failed to retrieve profile' });
+  }
+});
+
+app.put(['/api/student/profile', '/student/profile'], async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Student authentication token required' });
+    }
+    const token = authHeader.split(' ')[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Invalid or expired student session' });
+    }
+    await connectDB();
+    const id = decoded.userId || decoded.studentId || decoded.id;
+    let user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { username, avatarConfig } = req.body;
+    if (username && username.toLowerCase().trim() !== (user.username || '')) {
+      const cleanUsername = username.toLowerCase().trim();
+      if (!/^[a-z0-9_]{3,24}$/.test(cleanUsername)) {
+        return res.status(400).json({
+          error: 'Username must be 3-24 characters and only contain lowercase letters, numbers, and underscores (_)'
+        });
+      }
+      const existing = await User.findOne({ username: cleanUsername });
+      if (existing && existing._id.toString() !== user._id.toString()) {
+        return res.status(409).json({ error: 'Username already taken' });
+      }
+      user.username = cleanUsername;
+      user.name = cleanUsername;
+    }
+
+    if (avatarConfig && typeof avatarConfig === 'object') {
+      user.avatarConfig = {
+        ...(user.avatarConfig?.toObject ? user.avatarConfig.toObject() : user.avatarConfig || {}),
+        ...avatarConfig
+      };
+    }
+
+    user.lastOnline = new Date();
+    await user.save();
+
+    return res.json({
+      success: true,
+      student: {
+        _id: user._id,
+        id: user._id,
+        username: user.username || user.name,
+        name: user.name,
+        avatarConfig: user.avatarConfig,
+        role: user.role || 'user'
+      }
+    });
+  } catch (err) {
+    console.error('Update student profile error:', err);
+    return res.status(500).json({ error: 'Failed to update student profile' });
+  }
+});
+
+app.get(['/api/student/generate-username', '/student/generate-username'], (req, res) => {
+  res.json({ username: generateFunUsername() });
+});
+
+app.get(['/api/student/generate-avatar', '/student/generate-avatar'], async (req, res) => {
+  try {
+    await connectDB();
+    const chars = await AnimeCharacter.find({ active: true }).select('characterId').lean();
+    const presetOutfit = chars.length > 0
+      ? chars[Math.floor(Math.random() * chars.length)].characterId
+      : 'naruto';
+    const config = generateRandomAvatarConfig();
+    config.presetOutfit = presetOutfit;
+    res.json({ avatarConfig: config });
+  } catch (err) {
+    res.json({ avatarConfig: generateRandomAvatarConfig() });
   }
 });
 

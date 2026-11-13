@@ -53,4 +53,4 @@ const presentationSchema = new mongoose.Schema({
   collection: 'presentations'
 });
 
-module.exports = mongoose.model('Presentation', presentationSchema);
+module.exports = mongoose.models.Presentation || mongoose.model('Presentation', presentationSchema);

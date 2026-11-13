@@ -59,4 +59,4 @@ const gameSchema = new mongoose.Schema({
 gameSchema.index({ pin: 1 });
 gameSchema.index({ status: 1 });
 
-module.exports = mongoose.model('Game', gameSchema);
+module.exports = mongoose.models.Game || mongoose.model('Game', gameSchema);

@@ -32,4 +32,4 @@ const avatarSchema = new mongoose.Schema({
   collection: 'avatars'
 });
 
-module.exports = mongoose.model('Avatar', avatarSchema);
+module.exports = mongoose.models.Avatar || mongoose.model('Avatar', avatarSchema);

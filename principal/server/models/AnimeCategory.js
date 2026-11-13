@@ -32,4 +32,4 @@ const animeCategorySchema = new mongoose.Schema({
   collection: 'anime_categories'
 });
 
-module.exports = mongoose.model('AnimeCategory', animeCategorySchema);
+module.exports = mongoose.models.AnimeCategory || mongoose.model('AnimeCategory', animeCategorySchema);
