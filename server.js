@@ -45,6 +45,15 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Universal API URL Normalizer for Vercel Serverless
+app.use((req, res, next) => {
+  const matched = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-vercel-matched-path'];
+  if (matched && !matched.endsWith('.js') && !matched.endsWith('.html') && matched.startsWith('/api')) {
+    req.url = matched;
+  }
+  next();
+});
+
 // Database connection
 const { connectDB, getDbStatus } = require('./admin/server/db');
 connectDB();
@@ -277,6 +286,8 @@ try {
 }
 
 try {
+  const adminRoutes = require('./admin/server/routes/admin');
+  app.use(['/api/admin', '/admin'], adminRoutes);
   const adminApp = require('./admin/server/index');
   app.use(adminApp);
 } catch (e) {

@@ -5,9 +5,10 @@
 const app = require('../server');
 
 module.exports = (req, res) => {
-  // Normalize req.url if Vercel stripped /api prefix or rewrote it
-  if (req.url && !req.url.startsWith('/api')) {
-    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+  // If Vercel rewrote URL or passed x-matched-path, restore the original endpoint:
+  const matchedPath = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-vercel-matched-path'];
+  if (matchedPath && !matchedPath.endsWith('.js')) {
+    req.url = matchedPath;
   }
   return app(req, res);
 };
