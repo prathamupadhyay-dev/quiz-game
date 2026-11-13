@@ -27,13 +27,35 @@ export function AuthProvider({ children }) {
         setLoading(false);
         return;
       }
+
+      // Fast check: bounce non-admin users immediately without destroying their student session
+      const savedUserStr = localStorage.getItem('zync_user');
+      if (savedUserStr) {
+        try {
+          const parsed = JSON.parse(savedUserStr);
+          if (parsed && parsed.role && parsed.role.toLowerCase() !== 'admin') {
+            if (window.location.port === '5171') {
+              window.location.href = `http://${window.location.hostname}:5172`;
+            } else {
+              window.location.href = '/';
+            }
+            return;
+          }
+        } catch (e) {}
+      }
+
       try {
         const data = await api.getMe();
         if (data.user && data.user.role === 'admin') {
           setUser(data.user);
         } else {
-          api.logout();
-          setUser(null);
+          // Bounce non-admin users back to root
+          if (window.location.port === '5171') {
+            window.location.href = `http://${window.location.hostname}:5172`;
+          } else {
+            window.location.href = '/';
+          }
+          return;
         }
       } catch (err) {
         api.logout();

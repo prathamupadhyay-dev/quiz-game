@@ -352,7 +352,21 @@ export default function App() {
       const userRole = (authenticatedUser?.role || 'user').toLowerCase();
       const isMultiPortDev = window.location.port === '5172';
 
-      if (redirectParam) {
+      const roleAllowedPortals = {
+        admin: ['/admin', '/creator', '/principal', '/presentor', '/teacher', '/presenter', '/moderator'],
+        creator: ['/creator', '/principal'],
+        principal: ['/creator', '/principal'],
+        presentor: ['/presentor', '/teacher', '/presenter'],
+        teacher: ['/presentor', '/teacher', '/presenter'],
+        moderator: ['/moderator'],
+        user: [],
+        student: []
+      };
+
+      const allowedDestinations = roleAllowedPortals[userRole] || [];
+      const isAllowedRedirect = redirectParam && allowedDestinations.some(allowed => redirectParam.startsWith(allowed));
+
+      if (isAllowedRedirect) {
         let dest = redirectParam;
         if (isMultiPortDev) {
           if (dest.startsWith('/')) {
@@ -374,6 +388,10 @@ export default function App() {
           window.location.href = dest;
           return;
         }
+      }
+
+      if (redirectParam && !isAllowedRedirect) {
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
 
       if (isMultiPortDev) {

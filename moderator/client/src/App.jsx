@@ -99,6 +99,43 @@ export default function App() {
   const [loginError, setLoginError] = useState(null);
   const [portalNotice, setPortalNotice] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [verifyingAuth, setVerifyingAuth] = useState(true);
+
+  // Verify server session and Moderator role permissions
+  useEffect(() => {
+    async function verifyModeratorAccess() {
+      const currentToken = token || localStorage.getItem('zync_token') || localStorage.getItem('zync_moderator_token');
+      if (!currentToken) {
+        setVerifyingAuth(false);
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${currentToken}` }
+        });
+        if (!res.ok) throw new Error('Unauthorized');
+        const data = await res.json();
+        const role = (data.user?.role || '').toLowerCase();
+        const allowedRoles = ['moderator', 'admin'];
+        if (allowedRoles.includes(role)) {
+          setUser(data.user);
+          localStorage.setItem('zync_user', JSON.stringify(data.user));
+          setVerifyingAuth(false);
+        } else {
+          // Block unauthorized role and redirect to student pad
+          if (window.location.port === '5174') {
+            window.location.href = `http://${window.location.hostname}:5172`;
+          } else {
+            window.location.href = '/';
+          }
+        }
+      } catch (err) {
+        setVerifyingAuth(false);
+      }
+    }
+
+    verifyModeratorAccess();
+  }, [token]);
 
   // Moderation state
   const [activeGames, setActiveGames] = useState([]);
@@ -351,6 +388,9 @@ export default function App() {
     } catch (err) {}
   };
 
+  const allowedModeratorRoles = ['moderator', 'admin'];
+  const userRole = (user?.role || '').toLowerCase();
+
   // 1. Redirect if unauthenticated
   if (!token) {
     if (window.location.port === '5174') {
@@ -360,6 +400,38 @@ export default function App() {
     if (window.location.pathname !== '/' || !window.location.search.includes('redirect')) {
       window.location.href = '/?redirect=/moderator';
       return null;
+    }
+    return null;
+  }
+
+  // 2. Immediate local block if authenticated user lacks Moderator permission
+  if (user && !allowedModeratorRoles.includes(userRole)) {
+    if (window.location.port === '5174') {
+      window.location.href = `http://${window.location.hostname}:5172`;
+    } else {
+      window.location.href = '/';
+    }
+    return null;
+  }
+
+  // 3. Loading state while verifying server session
+  if (verifyingAuth) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono text-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+          <span>Verifying Moderator access...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Final check after server verification
+  if (!user || !allowedModeratorRoles.includes((user.role || '').toLowerCase())) {
+    if (window.location.port === '5174') {
+      window.location.href = `http://${window.location.hostname}:5172`;
+    } else {
+      window.location.href = '/';
     }
     return null;
   }

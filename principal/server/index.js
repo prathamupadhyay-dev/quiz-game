@@ -54,6 +54,19 @@ function requireAuth(req, res, next) {
   }
 }
 
+function requireCreatorRole(req, res, next) {
+  const role = (req.user?.role || '').toLowerCase();
+  const allowed = ['creator', 'principal', 'admin'];
+  if (!allowed.includes(role)) {
+    return res.status(403).json({ error: 'Access denied: Creator privileges required' });
+  }
+  next();
+}
+
+app.use(['/api/principal', '/principal'], requireDb, requireAuth, requireCreatorRole);
+app.use(['/api/creator', '/creator'], requireDb, requireAuth, requireCreatorRole);
+
+
 const PORTAL_MAP = {
   admin: { name: 'Admin', url: 'http://localhost:5171' },
   student: { name: 'Student', url: 'http://localhost:5172' },

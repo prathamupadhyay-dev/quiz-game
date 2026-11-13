@@ -57,6 +57,18 @@ function requireAuth(req, res, next) {
   }
 }
 
+function requireModeratorRole(req, res, next) {
+  const role = (req.user?.role || '').toLowerCase();
+  const allowed = ['moderator', 'admin'];
+  if (!allowed.includes(role)) {
+    return res.status(403).json({ error: 'Access denied: Moderator privileges required' });
+  }
+  next();
+}
+
+app.use(['/api/moderation', '/moderation'], requireDb, requireAuth, requireModeratorRole);
+
+
 const PORTAL_MAP = {
   admin: { name: 'Admin', url: 'http://localhost:5171' },
   student: { name: 'Student', url: 'http://localhost:5172' },
@@ -170,7 +182,7 @@ app.get('/api/games/active', requireDb, requireAuth, async (req, res) => {
 });
 
 // Moderation state for a game (polled every 1000ms by moderator view)
-app.get('/api/games/:id/moderation-state', requireDb, requireAuth, async (req, res) => {
+app.get('/api/games/:id/moderation-state', requireDb, requireAuth, requireModeratorRole, async (req, res) => {
   try {
     const game = await Game.findById(req.params.id);
     if (!game) return res.status(404).json({ error: 'Game not found' });
