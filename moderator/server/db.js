@@ -13,39 +13,49 @@ if (!process.env.MONGODB_URI || process.env.MONGODB_URI.trim() === '') {
 
 const mongoose = require('mongoose');
 
+const DEFAULT_URI = 'mongodb+srv://pratham:Pratham123@cluster0.ptfjooq.mongodb.net/zync?retryWrites=true&w=majority&appName=Cluster0';
+
 let isConnected = false;
 let retryTimer = null;
+let cached = global._mongoConn;
+if (!cached) {
+  cached = global._mongoConn = { conn: null, promise: null };
+}
 
 async function attemptConnect() {
-  const uri = process.env.MONGODB_URI;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    isConnected = true;
+    return true;
+  }
 
-  if (!uri || uri.trim() === '') {
-    console.warn('[DB] MONGODB_URI is not set. Retrying in 5 seconds...');
-    scheduleRetry();
-    return false;
+  const uri = process.env.MONGODB_URI || DEFAULT_URI;
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(uri, {
+      dbName: 'zync',
+      serverSelectionTimeoutMS: 8000,
+    }).then((m) => {
+      isConnected = true;
+      console.log('[DB] Connected to MongoDB Atlas (database: zync)');
+      return m;
+    }).catch((err) => {
+      cached.promise = null;
+      isConnected = false;
+      console.error('[DB] MongoDB connection error:', err.message);
+      scheduleRetry();
+      throw err;
+    });
   }
 
   try {
-    await mongoose.connect(uri, {
-      dbName: 'zync',
-      serverSelectionTimeoutMS: 10000,
-    });
+    cached.conn = await cached.promise;
     isConnected = true;
     if (retryTimer) {
       clearTimeout(retryTimer);
       retryTimer = null;
     }
-    console.log('[DB] Connected to MongoDB (database: zync)');
     return true;
   } catch (err) {
-    isConnected = false;
-    console.error('[DB] MongoDB connection error:', err.message);
-    console.error('[DB] Likely causes:\n' +
-      '  - Atlas Network Access must allow this IP (or 0.0.0.0/0)\n' +
-      '  - Wrong username or password\n' +
-      '  - Special characters in password not URL-encoded\n' +
-      '  - Local DNS resolver unable to resolve SRV records');
-    scheduleRetry();
     return false;
   }
 }

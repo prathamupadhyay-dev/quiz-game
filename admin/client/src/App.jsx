@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import LoadingState from './components/LoadingState';
 
-import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
 import QuizzesPage from './pages/QuizzesPage';
@@ -19,32 +18,15 @@ function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <LoadingState message="Verifying session" />
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
-
-function PublicOnlyRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <LoadingState message="Checking session" />
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    window.location.href = '/?redirect=/admin';
+    return null;
   }
 
   return children;
@@ -58,15 +40,6 @@ export default function App() {
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <Routes>
-          <Route
-            path="/login"
-            element={
-              <PublicOnlyRoute>
-                <LoginPage />
-              </PublicOnlyRoute>
-            }
-          />
-
           <Route
             path="/"
             element={

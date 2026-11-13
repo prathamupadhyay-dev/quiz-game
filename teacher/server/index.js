@@ -75,7 +75,10 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database readiness
-function requireDb(req, res, next) {
+async function requireDb(req, res, next) {
+  if (!getDbStatus()) {
+    await connectDB().catch(() => {});
+  }
   if (!getDbStatus()) {
     return res.status(503).json({ error: 'Database not configured yet' });
   }

@@ -103,8 +103,15 @@ export default function App() {
   // -------------------------------------------------------------
   // STATE: AUTH & STUDENT PROFILE
   // -------------------------------------------------------------
-  const [authToken, setAuthToken] = useState(() => localStorage.getItem('zync_student_auth_token') || '');
-  const [student, setStudent] = useState(null);
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('zync_token') || localStorage.getItem('zync_student_auth_token') || '');
+  const [student, setStudent] = useState(() => {
+    try {
+      const saved = localStorage.getItem('zync_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
@@ -115,7 +122,7 @@ export default function App() {
   const [newPodiumComment, setNewPodiumComment] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const [isWarping, setIsWarping] = useState(false);
-  const [showStage, setShowStage] = useState(() => Boolean(localStorage.getItem('zync_student_auth_token')));
+  const [showStage, setShowStage] = useState(() => Boolean(localStorage.getItem('zync_token') || localStorage.getItem('zync_student_auth_token')));
 
   // -------------------------------------------------------------
   // STATE: CHARACTER CUSTOMIZER & WARDROBE
@@ -324,11 +331,47 @@ export default function App() {
       }
 
       setIsWarping(true);
+      const authenticatedUser = data.user || data.student;
+      localStorage.setItem('zync_token', data.token);
+      localStorage.setItem('zync_user', JSON.stringify(authenticatedUser));
       localStorage.setItem('zync_student_auth_token', data.token);
+      localStorage.setItem('zync_admin_token', data.token);
+      localStorage.setItem('zync_creator_token', data.token);
+      localStorage.setItem('zync_teacher_token', data.token);
+      localStorage.setItem('zync_moderator_token', data.token);
+
       setAuthToken(data.token);
-      setStudent(data.student);
-      if (data.student?.avatarConfig) {
-        setAvatarConfig(data.student.avatarConfig);
+      setStudent(authenticatedUser);
+      if (authenticatedUser?.avatarConfig) {
+        setAvatarConfig(authenticatedUser.avatarConfig);
+      }
+
+      // Check role redirection or ?redirect= query param
+      const params = new URLSearchParams(window.location.search);
+      const redirectParam = params.get('redirect');
+      const userRole = (authenticatedUser?.role || 'user').toLowerCase();
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+      if (redirectParam) {
+        window.location.href = redirectParam;
+        return;
+      }
+
+      if (userRole === 'admin') {
+        window.location.href = isLocal ? 'http://localhost:5171' : '/admin';
+        return;
+      }
+      if (userRole === 'creator' || userRole === 'principal') {
+        window.location.href = isLocal ? 'http://localhost:5175' : '/creator';
+        return;
+      }
+      if (userRole === 'presentor' || userRole === 'teacher') {
+        window.location.href = isLocal ? 'http://localhost:5173' : '/presentor';
+        return;
+      }
+      if (userRole === 'moderator') {
+        window.location.href = isLocal ? 'http://localhost:5174' : '/moderator';
+        return;
       }
 
       setTimeout(() => {
@@ -866,9 +909,6 @@ export default function App() {
           }
           className="w-full max-w-sm bg-[#121214]/90 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 sm:p-7 flex flex-col items-center text-center shadow-2xl relative z-10"
         >
-          {/* Universal Portal Switcher */}
-          <PortalSwitcher current="user" />
-
           {/* Logo Mark with Gradient Glow */}
           <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#5E5CE6] to-[#06B6D4] flex items-center justify-center mb-3 shadow-lg shadow-[#5E5CE6]/40">
             <Sparkles className="w-7 h-7 text-white" />
@@ -1006,6 +1046,8 @@ export default function App() {
 
     return (
       <div className="h-screen w-full bg-black text-white flex flex-col justify-between p-4 sm:p-5 relative overflow-hidden select-none">
+        {/* Universal Top Role-Based Portal Switcher */}
+        <PortalSwitcher current="user" currentUser={student} />
         {/* React Bits: Squares Interactive Drift Grid */}
         <Squares
           direction="diagonal"

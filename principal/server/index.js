@@ -44,7 +44,10 @@ app.use(cors({
 
 app.use(express.json());
 
-function requireDb(req, res, next) {
+async function requireDb(req, res, next) {
+  if (!getDbStatus()) {
+    await connectDB().catch(() => {});
+  }
   if (!getDbStatus()) {
     return res.status(503).json({ error: 'Database not configured yet' });
   }

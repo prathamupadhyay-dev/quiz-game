@@ -92,9 +92,9 @@ CRITICAL PROPORTION & ANATOMY RULES (DO NOT USE A GENERIC MANNEQUIN):
 Generate the complete, ready-to-use vector code for [CHARACTER_NAME] now.`;
 
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('zync_creator_token') || localStorage.getItem('zync_principal_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('zync_token') || localStorage.getItem('zync_creator_token') || localStorage.getItem('zync_principal_token'));
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('zync_creator_user') || localStorage.getItem('zync_principal_user');
+    const saved = localStorage.getItem('zync_user') || localStorage.getItem('zync_creator_user') || localStorage.getItem('zync_principal_user');
     return saved ? JSON.parse(saved) : null;
   });
 
@@ -435,121 +435,17 @@ export default function App() {
     } catch (err) {}
   };
 
-  // 1. Login View
+  // 1. Redirect if unauthenticated
   if (!token) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden select-none">
-        {/* React Bits: Hyperspeed 3D Cosmic Starfield (Matching User Login Theme) */}
-        <Hyperspeed
-          speed={1.6}
-          starCount={450}
-          warpSpeed={36}
-          trailColor="#38BDF8"
-        />
-
-        {/* Ambient Radial Vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-1" />
-
-        <div className="w-full max-w-sm bg-[#121214]/90 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl relative z-10 flex flex-col items-center">
-          {/* Universal Portal Switcher */}
-          <PortalSwitcher current="creator" />
-
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-black mb-3 shadow-xl shadow-sky-500/30">
-              <Palette size={28} strokeWidth={2} />
-            </div>
-            <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-2">
-              <ShinyText text="ZYNC" speed={2.5} className="font-extrabold" />
-              <span className="text-xs font-mono uppercase tracking-widest px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                Creator
-              </span>
-            </h1>
-            <p className="text-sm text-neutral-400 mt-2">
-              Quiz builder & character avatar studio
-            </p>
-          </div>
-
-          {loginError && (
-            <div className="mb-6 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-sm text-rose-400 text-center font-medium">
-              {loginError}
-            </div>
-          )}
-
-          {portalNotice && (
-            <div className="mb-6 p-4 rounded-2xl bg-amber-400/10 border border-amber-400/30 text-left">
-              <p className="text-sm text-amber-300 font-bold mb-2">
-                Use the {portalNotice.portalName} portal
-              </p>
-              <a
-                href={portalNotice.portalUrl}
-                className="inline-flex items-center gap-1.5 text-xs text-white bg-white/10 px-3.5 py-1.5 rounded-full border border-white/20 hover:border-amber-400 transition"
-              >
-                <span>Go to {portalNotice.portalName} Portal</span>
-                <ExternalLink size={14} />
-              </a>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 block px-1">
-                Username / Email
-              </label>
-              <input
-                type="text"
-                placeholder="nihal or creator@zync.local"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-14 px-5 rounded-2xl bg-white/[0.05] border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-sky-400/60 focus:bg-white/[0.08] transition text-base"
-                required
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 block px-1">
-                Password
-              </label>
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-14 px-5 rounded-2xl bg-white/[0.05] border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-sky-400/60 focus:bg-white/[0.08] transition text-base"
-                required
-              />
-            </div>
-
-            <div className="pt-3">
-              <StarBorder
-                as="button"
-                type="submit"
-                disabled={loading}
-                color="#38BDF8"
-                speed="3.5s"
-                className="w-full cursor-pointer active:scale-95 transition-transform"
-                innerClassName="h-14 px-6 flex items-center justify-center"
-              >
-                <div className="font-extrabold text-base tracking-wide flex items-center justify-center gap-2 text-white">
-                  <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
-                  <ChevronRight size={18} />
-                </div>
-              </StarBorder>
-            </div>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-white/10 text-center">
-            <p className="text-xs text-neutral-500">
-              Only authorized creators may publish quizzes and avatars.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    window.location.href = '/?redirect=/creator';
+    return null;
   }
 
   // 2. Main Creator Portal View
   return (
     <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden select-none">
+      {/* Universal Top Role-Based Portal Switcher */}
+      <PortalSwitcher current="creator" currentUser={user} />
       {/* Hyperspeed Cosmic Background */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <Hyperspeed effectOptions={hyperspeedConfig} />

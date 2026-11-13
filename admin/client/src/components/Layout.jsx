@@ -3,12 +3,16 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import Squares from './reactbits/Squares';
+import PortalSwitcher from './PortalSwitcher';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col relative overflow-x-hidden select-none">
+      {/* Universal Top Role-Based Portal Switcher */}
+      <PortalSwitcher current="admin" />
+
       {/* React Bits: Squares Interactive Drift Grid */}
       <Squares
         direction="diagonal"

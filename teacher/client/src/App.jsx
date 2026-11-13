@@ -74,12 +74,11 @@ const hyperspeedConfig = {
 };
 
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('zync_teacher_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('zync_token') || localStorage.getItem('zync_teacher_token'));
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('zync_teacher_user');
+    const saved = localStorage.getItem('zync_user') || localStorage.getItem('zync_teacher_user');
     return saved ? JSON.parse(saved) : null;
   });
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(null);
@@ -452,116 +451,10 @@ export default function App() {
     } catch (err) {}
   };
 
-  // 1. Login View
+  // 1. Redirect if unauthenticated
   if (!token) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden select-none">
-        {/* React Bits: Hyperspeed 3D Cosmic Starfield (Matching User Login Theme) */}
-        <Hyperspeed
-          speed={1.6}
-          starCount={450}
-          warpSpeed={36}
-          trailColor="#10B981"
-        />
-
-        {/* Ambient Radial Vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-1" />
-
-        <div className="w-full max-w-sm bg-[#121214]/90 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl relative z-10 flex flex-col items-center">
-          {/* Universal Portal Switcher */}
-          <PortalSwitcher current="presentor" />
-
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black mb-3 shadow-lg shadow-emerald-500/30">
-              <Presentation size={28} strokeWidth={2} />
-            </div>
-            <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-2">
-              <ShinyText text="ZYNC" speed={2.5} className="font-extrabold" />
-              <span className="text-xs font-mono uppercase tracking-widest px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Presentor
-              </span>
-            </h1>
-            <p className="text-sm text-neutral-400 mt-2">
-              Classroom Quiz Arena and interactive host terminal
-            </p>
-          </div>
-
-          {loginError && (
-            <div className="mb-6 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-sm text-rose-400 text-center font-medium">
-              {loginError}
-            </div>
-          )}
-
-          {portalNotice && (
-            <div className="mb-6 p-4 rounded-2xl bg-amber-400/10 border border-amber-400/30 text-left">
-              <p className="text-sm text-amber-300 font-bold mb-2">
-                Use the {portalNotice.portalName} portal
-              </p>
-              <a
-                href={portalNotice.portalUrl}
-                className="inline-flex items-center gap-1.5 text-xs text-white bg-white/10 px-3.5 py-1.5 rounded-full border border-white/20 hover:border-amber-400 transition"
-              >
-                <span>Go to {portalNotice.portalName} Portal</span>
-                <ExternalLink size={14} />
-              </a>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 block px-1">
-                Username / Email
-              </label>
-              <input
-                type="text"
-                placeholder="ramya or presentor@zync.local"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-14 px-5 rounded-2xl bg-white/[0.05] border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-emerald-400/60 focus:bg-white/[0.08] transition text-base"
-                required
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 block px-1">
-                Password
-              </label>
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-14 px-5 rounded-2xl bg-white/[0.05] border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-emerald-400/60 focus:bg-white/[0.08] transition text-base"
-                required
-              />
-            </div>
-
-            <div className="pt-3">
-              <StarBorder
-                as="button"
-                type="submit"
-                disabled={loading}
-                color="#10B981"
-                speed="3.5s"
-                className="w-full cursor-pointer active:scale-95 transition-transform"
-                innerClassName="h-14 px-6 flex items-center justify-center"
-              >
-                <div className="font-extrabold text-base tracking-wide flex items-center justify-center gap-2 text-white">
-                  <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
-                  <ChevronRight size={18} />
-                </div>
-              </StarBorder>
-            </div>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-white/10 text-center">
-            <p className="text-xs text-neutral-500">
-              Only authorized staff members may launch classroom quiz sessions.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    window.location.href = '/?redirect=/presentor';
+    return null;
   }
 
   // 2. Active Quiz Arena (Projector Fullscreen Experience)
@@ -570,6 +463,8 @@ export default function App() {
 
     return (
       <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden select-none">
+        {/* Universal Top Role-Based Portal Switcher */}
+        <PortalSwitcher current="presentor" currentUser={user} />
         {/* Hyperspeed Cosmic Background */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <Hyperspeed effectOptions={hyperspeedConfig} />
@@ -1238,6 +1133,7 @@ export default function App() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[180px] pointer-events-none z-1" />
 
       {/* Top Navbar matching admin, principal, moderator */}
+      <PortalSwitcher current="presentor" currentUser={user} />
       <header className="relative z-10 h-16 flex items-center justify-between px-6 sm:px-8 bg-[#121214]/85 backdrop-blur-2xl border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black shadow-md shadow-emerald-500/30">

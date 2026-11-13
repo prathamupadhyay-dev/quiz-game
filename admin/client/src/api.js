@@ -2,14 +2,17 @@ const API_BASE = '/api';
 
 class ApiService {
   getToken() {
-    return localStorage.getItem('zync_admin_token');
+    return localStorage.getItem('zync_token') || localStorage.getItem('zync_admin_token');
   }
 
   setToken(token) {
     if (token) {
+      localStorage.setItem('zync_token', token);
       localStorage.setItem('zync_admin_token', token);
     } else {
+      localStorage.removeItem('zync_token');
       localStorage.removeItem('zync_admin_token');
+      localStorage.removeItem('zync_user');
     }
   }
 
@@ -33,10 +36,7 @@ class ApiService {
       if (!response.ok) {
         if (response.status === 401) {
           this.setToken(null);
-          const loginPath = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
-          if (window.location.pathname !== loginPath) {
-            window.location.href = loginPath;
-          }
+          window.location.href = '/?redirect=/admin';
         }
         const error = new Error((data && data.error) || 'Request failed with status ' + response.status);
         error.status = response.status;

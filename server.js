@@ -125,6 +125,91 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Universal Auth - Register
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    await connectDB();
+    const { username, password, confirmPassword } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const cleanUsername = username.toLowerCase().trim();
+    if (!/^[a-z0-9_]{3,24}$/.test(cleanUsername)) {
+      return res.status(400).json({
+        error: 'Username must be 3-24 characters and only contain lowercase letters, numbers, and underscores (_)'
+      });
+    }
+
+    if (password.length < 4) {
+      return res.status(400).json({ error: 'Password must be at least 4 characters' });
+    }
+
+    if (confirmPassword && password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    const existing = await User.findOne({ username: cleanUsername });
+    if (existing) {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      username: cleanUsername,
+      name: cleanUsername,
+      email: `${cleanUsername}@zync.local`,
+      passwordHash,
+      role: 'user',
+      avatarConfig: {
+        skinColor: '#F5C7A9',
+        hairStyle: 'curly',
+        hairColor: '#1C1C1E',
+        faceExpression: 'smile',
+        topType: 'hoodie',
+        topColor: '#5E5CE6',
+        bottomType: 'jeans',
+        bottomColor: '#1E293B',
+        shoesType: 'sneakers',
+        accessory: 'none',
+        presetOutfit: 'naruto'
+      },
+      lastOnline: new Date()
+    });
+
+    const token = jwt.sign(
+      {
+        userId: newUser._id,
+        id: newUser._id,
+        role: newUser.role,
+        username: newUser.username,
+        email: newUser.email
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.status(201).json({
+      token,
+      user: {
+        id: newUser._id,
+        _id: newUser._id,
+        username: newUser.username,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        avatarConfig: newUser.avatarConfig,
+        access: newUser.access
+      }
+    });
+  } catch (err) {
+    console.error('Universal register error:', err);
+    return res.status(500).json({ error: 'Internal server error during registration' });
+  }
+});
+
 // Universal Auth - Me
 app.get('/api/auth/me', async (req, res) => {
   try {
@@ -134,6 +219,7 @@ app.get('/api/auth/me', async (req, res) => {
     }
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
+    await connectDB();
     const user = await User.findById(decoded.userId || decoded.id).select('-passwordHash');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

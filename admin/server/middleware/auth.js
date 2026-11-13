@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
-const { getDbStatus } = require('../db');
+const { connectDB, getDbStatus } = require('../db');
 
-function requireDb(req, res, next) {
+async function requireDb(req, res, next) {
+  if (!getDbStatus()) {
+    await connectDB().catch(() => {});
+  }
   if (!getDbStatus()) {
     return res.status(503).json({
       error: 'Database not configured yet'
